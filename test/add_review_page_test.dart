@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bagisto_flutter/features/account/data/models/account_models.dart';
@@ -40,9 +41,104 @@ void main() {
       expect(repository.createReviewCalls, 0);
     },
   );
+  group('media attachments', () {
+    late Directory dir;
+
+    setUp(() => dir = Directory.systemTemp.createTempSync('add_review_media'));
+    tearDown(() => dir.deleteSync(recursive: true));
+
+    File writeFile(String name) =>
+        File('${dir.path}/$name')..writeAsBytesSync([1, 2, 3]);
+
+    testWidgets('shows the section with an add tile when empty', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildTestApp());
+
+      expect(
+        find.text('Photos & Videos', findRichText: true),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('add_review_media_add')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('add_review_media_tile_0')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('renders image and video tiles and removes one', (
+      tester,
+    ) async {
+      final photo = writeFile('p.png');
+      final video = writeFile('v.mp4');
+
+      await tester.pumpWidget(
+        _buildTestApp(initialAttachments: [photo, video]),
+      );
+
+      expect(
+        find.byKey(const ValueKey('add_review_media_tile_0')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('add_review_media_tile_1')),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.play_circle_fill), findsOneWidget);
+
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('add_review_media_remove_0')),
+      );
+      await tester.tap(find.byKey(const ValueKey('add_review_media_remove_0')));
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('add_review_media_tile_1')),
+        findsNothing,
+      );
+      expect(find.byIcon(Icons.play_circle_fill), findsOneWidget);
+    });
+
+    testWidgets('hides the add tile at 5 attachments', (tester) async {
+      final files = List.generate(5, (i) => writeFile('p$i.png'));
+
+      await tester.pumpWidget(_buildTestApp(initialAttachments: files));
+
+      expect(
+        find.byKey(const ValueKey('add_review_media_tile_4')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('add_review_media_add')), findsNothing);
+    });
+
+    testWidgets('submits selected attachments', (tester) async {
+      final repository = _FakeAccountRepository()..neverComplete = true;
+      final photo = writeFile('p.png');
+
+      await tester.pumpWidget(
+        _buildTestApp(repository: repository, initialAttachments: [photo]),
+      );
+
+      await tester.tap(find.byIcon(Icons.star_outline_rounded).at(4));
+      await tester.enterText(find.byType(TextFormField).at(0), 'Ann');
+      await tester.enterText(find.byType(TextFormField).at(1), 'Nice');
+      await tester.enterText(find.byType(TextFormField).at(2), 'Good');
+      await tester.tap(find.text('Submit Review'));
+      await tester.pump();
+
+      expect(repository.createReviewCalls, 1);
+      expect(repository.lastAttachments!.single.path, photo.path);
+    });
+  });
 }
 
-Widget _buildTestApp({AccountRepository? repository}) {
+Widget _buildTestApp({
+  AccountRepository? repository,
+  List<File> initialAttachments = const [],
+}) {
   final accountRepository = repository ?? _FakeAccountRepository();
 
   return MaterialApp(
@@ -50,9 +146,10 @@ Widget _buildTestApp({AccountRepository? repository}) {
     supportedLocales: AppLocalizations.supportedLocales,
     home: BlocProvider(
       create: (_) => AddReviewBloc(repository: accountRepository),
-      child: const AddReviewPage(
+      child: AddReviewPage(
         productId: 10,
         productName: 'Arctic Frost Winter Accessories Bundle',
+        initialAttachments: initialAttachments,
       ),
     ),
   );
@@ -60,6 +157,8 @@ Widget _buildTestApp({AccountRepository? repository}) {
 
 class _FakeAccountRepository extends AccountRepository {
   int createReviewCalls = 0;
+  List<File>? lastAttachments;
+  bool neverComplete = false;
 
   _FakeAccountRepository()
     : super(
@@ -79,6 +178,10 @@ class _FakeAccountRepository extends AccountRepository {
     List<File> attachments = const [],
   }) async {
     createReviewCalls += 1;
+    lastAttachments = attachments;
+    if (neverComplete) {
+      return Completer<ProductReview>().future;
+    }
     return ProductReview(
       id: '1',
       name: name,

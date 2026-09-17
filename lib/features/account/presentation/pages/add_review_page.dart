@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/graphql/graphql_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../data/repository/account_repository.dart';
+import '../../data/utils/review_attachment_encoder.dart';
 import '../bloc/add_review_bloc.dart';
 
 /// Add Review Page — Figma node-id=2157-6741
@@ -16,6 +20,7 @@ import '../bloc/add_review_bloc.dart';
 ///   - Nick Name* text field
 ///   - Summary text field
 ///   - Review multi-line text field
+///   - Photos & Videos picker (up to 5 files, 5 MB each)
 ///   - "Submit Review" orange button (full width)
 ///
 /// Requires [productId], [productName], and optional [productImageUrl]
@@ -30,11 +35,16 @@ class AddReviewPage extends StatefulWidget {
   /// Product image URL (nullable)
   final String? productImageUrl;
 
+  /// Pre-selected attachments. Test seam; production callers omit it.
+  @visibleForTesting
+  final List<File> initialAttachments;
+
   const AddReviewPage({
     super.key,
     required this.productId,
     required this.productName,
     this.productImageUrl,
+    this.initialAttachments = const [],
   });
 
   /// Navigate to AddReviewPage from any context.
@@ -95,6 +105,8 @@ class _AddReviewPageState extends State<AddReviewPage> {
   final _reviewController = TextEditingController();
   int _selectedRating = 0;
   String? _ratingErrorText;
+  final ImagePicker _imagePicker = ImagePicker();
+  late final List<File> _attachments = List.of(widget.initialAttachments);
 
   @override
   void dispose() {
@@ -125,6 +137,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
           comment: _reviewController.text.trim(),
           rating: _selectedRating,
           name: _nickNameController.text.trim(),
+          attachments: List.unmodifiable(_attachments),
         ));
   }
 
@@ -272,6 +285,11 @@ class _AddReviewPageState extends State<AddReviewPage> {
                             return null;
                           },
                         ),
+
+                        const SizedBox(height: 20),
+
+                        // ── Photos & Videos ──
+                        _buildMediaSection(context, isSubmitting),
 
                         const SizedBox(height: 24),
                       ],
@@ -527,6 +545,265 @@ class _AddReviewPageState extends State<AddReviewPage> {
                 ),
               ]
             : null,
+      ),
+    );
+  }
+
+  // ──────────────────────────────────────────────
+  // Photos & Videos — pick, preview, remove
+  // ──────────────────────────────────────────────
+
+  Future<void> _showMediaSourceSheet() async {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: isDark ? AppColors.neutral800 : AppColors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        final textStyle = TextStyle(
+          fontFamily: 'Roboto',
+          fontWeight: FontWeight.w400,
+          fontSize: 16,
+          color: isDark ? AppColors.neutral200 : AppColors.neutral900,
+        );
+        final iconColor = isDark ? AppColors.neutral200 : AppColors.neutral900;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.photo_library_outlined, color: iconColor),
+                title: Text(l10n.accountReviewGallery, style: textStyle),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(ImageSource.gallery),
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_camera_outlined, color: iconColor),
+                title: Text(l10n.accountReviewCamera, style: textStyle),
+                onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source != null) await _pickMedia(source);
+  }
+
+  Future<void> _pickMedia(ImageSource source) async {
+    final l10n = AppLocalizations.of(context)!;
+    final remaining = ReviewAttachmentEncoder.maxFiles - _attachments.length;
+    if (remaining <= 0) {
+      _showMediaMessage(
+        l10n.accountReviewMaxFiles(ReviewAttachmentEncoder.maxFiles),
+      );
+      return;
+    }
+
+    List<XFile> picked;
+    try {
+      if (source == ImageSource.camera) {
+        final photo = await _imagePicker.pickImage(
+          source: ImageSource.camera,
+          imageQuality: 85,
+        );
+        picked = photo == null ? const [] : [photo];
+      } else {
+        // image_picker throws when limit < 2; null means no limit.
+        picked = await _imagePicker.pickMultipleMedia(
+          imageQuality: 85,
+          limit: remaining > 1 ? remaining : null,
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ AddReviewPage._pickMedia error: $e');
+      if (mounted) _showMediaMessage(l10n.accountReviewPickFailed);
+      return;
+    }
+    if (picked.isEmpty || !mounted) return;
+
+    final accepted = <File>[];
+    final messages = <String>{};
+    for (final xFile in picked) {
+      if (ReviewAttachmentEncoder.mimeTypeFor(xFile.path) == null) {
+        messages.add(l10n.accountReviewUnsupportedFile);
+        continue;
+      }
+      if (await xFile.length() > ReviewAttachmentEncoder.maxFileBytes) {
+        messages.add(l10n.accountReviewFileTooLarge);
+        continue;
+      }
+      if (_attachments.length + accepted.length >=
+          ReviewAttachmentEncoder.maxFiles) {
+        messages.add(
+          l10n.accountReviewMaxFiles(ReviewAttachmentEncoder.maxFiles),
+        );
+        break;
+      }
+      accepted.add(File(xFile.path));
+    }
+
+    if (!mounted) return;
+    if (accepted.isNotEmpty) {
+      setState(() => _attachments.addAll(accepted));
+    }
+    if (messages.isNotEmpty) _showMediaMessage(messages.join('\n'));
+  }
+
+  void _removeAttachment(int index) {
+    setState(() => _attachments.removeAt(index));
+  }
+
+  void _showMediaMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+  }
+
+  Widget _buildMediaSection(BuildContext context, bool isSubmitting) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final canAdd = _attachments.length < ReviewAttachmentEncoder.maxFiles;
+    final borderColor = isDark ? AppColors.neutral700 : AppColors.neutral200;
+    final addColor = isDark ? AppColors.neutral300 : AppColors.neutral700;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldLabel(context, label: l10n.accountReviewPhotosVideos),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 80,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(top: 8, right: 8),
+            itemCount: _attachments.length + (canAdd ? 1 : 0),
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              if (index == _attachments.length) {
+                return GestureDetector(
+                  key: const ValueKey('add_review_media_add'),
+                  onTap: isSubmitting ? null : _showMediaSourceSheet,
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.add_a_photo_outlined,
+                          size: 24,
+                          color: addColor,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.accountReviewAddMedia,
+                          style: TextStyle(
+                            fontFamily: 'Roboto',
+                            fontWeight: FontWeight.w400,
+                            fontSize: 12,
+                            color: addColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return _buildMediaTile(
+                index: index,
+                file: _attachments[index],
+                borderColor: borderColor,
+                isSubmitting: isSubmitting,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMediaTile({
+    required int index,
+    required File file,
+    required Color borderColor,
+    required bool isSubmitting,
+  }) {
+    final isVideo = ReviewAttachmentEncoder.isVideoPath(file.path);
+
+    return SizedBox(
+      key: ValueKey('add_review_media_tile_$index'),
+      width: 72,
+      height: 72,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: borderColor),
+              color: AppColors.neutral800,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: isVideo
+                ? const Center(
+                    child: Icon(
+                      Icons.play_circle_fill,
+                      size: 32,
+                      color: AppColors.white,
+                    ),
+                  )
+                : Image.file(
+                    file,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const Center(
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        size: 24,
+                        color: AppColors.neutral400,
+                      ),
+                    ),
+                  ),
+          ),
+          Positioned(
+            top: -8,
+            right: -8,
+            child: GestureDetector(
+              key: ValueKey('add_review_media_remove_$index'),
+              onTap: isSubmitting ? null : () => _removeAttachment(index),
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: const BoxDecoration(
+                  color: AppColors.neutral900,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close,
+                  size: 16,
+                  color: AppColors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

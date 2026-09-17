@@ -66,17 +66,10 @@ class AddReviewPage extends StatefulWidget {
       repository = context.read<AccountRepository>();
     } catch (_) {
       final authState = context.read<AuthBloc>().state;
-      if (authState is! AuthAuthenticated) {
-        final l10n = AppLocalizations.of(context)!;
-        // Not logged in — show a message and bail out.
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.accountPleaseLoginToWriteReview)),
-        );
-        return Future.value(null);
-      }
-      final client =
-          GraphQLClientProvider.authenticatedClient(authState.token);
-      repository = AccountRepository(client: client.value);
+      final client = authState is AuthAuthenticated
+          ? GraphQLClientProvider.authenticatedClient(authState.token).value
+          : GraphQLClientProvider.client.value;
+      repository = AccountRepository(client: client);
     }
 
     return Navigator.of(context).push<bool>(
@@ -138,9 +131,14 @@ class _AddReviewPageState extends State<AddReviewPage> {
           title: _summaryController.text.trim(),
           comment: _reviewController.text.trim(),
           rating: _selectedRating,
-          name: _nickNameController.text.trim(),
+          name: _isLoggedIn ? "" : _nickNameController.text.trim(),
           attachments: List.unmodifiable(_attachments),
         ));
+  }
+
+  bool get _isLoggedIn {
+    final authState = context.read<AuthBloc>().state;
+    return authState is AuthAuthenticated;
   }
 
   @override
@@ -242,21 +240,22 @@ class _AddReviewPageState extends State<AddReviewPage> {
                             const SizedBox(height: 20),
 
                             // ── Nick Name Field ──
-                            _buildTextField(
-                              context,
-                              label: l10n.accountNickName,
-                              isRequired: true,
-                              controller: _nickNameController,
-                              hintText: l10n.accountEnterYourName,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return l10n.accountNameRequired;
-                                }
-                                return null;
-                              },
-                            ),
-
-                            const SizedBox(height: 20),
+                            if (!_isLoggedIn) ...[
+                              _buildTextField(
+                                context,
+                                label: l10n.accountNickName,
+                                isRequired: true,
+                                controller: _nickNameController,
+                                hintText: l10n.accountEnterYourName,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return l10n.accountNameRequired;
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                            ],
 
                             // ── Summary Field ──
                             _buildTextField(

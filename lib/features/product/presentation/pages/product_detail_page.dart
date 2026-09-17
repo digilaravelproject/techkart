@@ -320,7 +320,7 @@ class _ProductDetailView extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.only(left: 0, right: 16),
           child: Row(
             children: [
               // Back button

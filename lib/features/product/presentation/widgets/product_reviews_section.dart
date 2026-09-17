@@ -465,14 +465,10 @@ class ProductReviewsSection extends StatelessWidget {
     );
   }
 
-  /// "Write a Review" button — only visible to logged-in users.
+  /// "Write a Review" button
   Widget _buildWriteReviewButton(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
-        if (authState is! AuthAuthenticated) {
-          return const SizedBox.shrink();
-        }
-
         return GestureDetector(
           onTap: () async {
             final productId = product.numericId;

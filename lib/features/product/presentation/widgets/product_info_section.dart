@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../category/data/models/product_model.dart';
 
-/// Product info: title, price row, rating badge + review count, stock chip
+/// Product info: title, price row, short description, rating badge +
+/// review count, stock chip
 /// Figma: Frame 1984079200 – below the image carousel
 class ProductInfoSection extends StatelessWidget {
   final ProductModel product;
@@ -33,26 +35,18 @@ class ProductInfoSection extends StatelessWidget {
             ),
           ),
 
-          // ── Short Description (configurable products only) ──
-          if (product.isConfigurable &&
-              product.shortDescription != null &&
-              product.shortDescription!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                _stripHtml(product.shortDescription!),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.bodyText(context).copyWith(
-                  color: isDark ? AppColors.neutral400 : AppColors.neutral600,
-                ),
-              ),
-            ),
-
           const SizedBox(height: 12),
 
           // ── Price Row ──
           _buildPriceRow(context),
+
+          // ── Short Description (any product type, HTML like the web) ──
+          if (_hasText(product.shortDescription))
+            Padding(
+              key: const ValueKey('product_short_description'),
+              padding: const EdgeInsets.only(top: 8),
+              child: _buildShortDescription(context, isDark),
+            ),
 
           const SizedBox(height: 12),
 
@@ -66,10 +60,45 @@ class ProductInfoSection extends StatelessWidget {
     );
   }
 
+  /// True when the HTML has visible text (not just empty tags or spaces).
+  bool _hasText(String? html) {
+    if (html == null) return false;
+    return _stripHtml(html).trim().isNotEmpty;
+  }
+
+  Widget _buildShortDescription(BuildContext context, bool isDark) {
+    final textColor = isDark ? AppColors.neutral400 : AppColors.neutral600;
+
+    return Html(
+      data: product.shortDescription,
+      style: {
+        'body': Style(
+          margin: Margins.zero,
+          padding: HtmlPaddings.zero,
+          fontFamily: 'Roboto',
+          fontSize: FontSize(14),
+          lineHeight: LineHeight.number(1.5),
+          color: textColor,
+        ),
+        'p': Style(margin: Margins.zero),
+        'ul': Style(
+          margin: Margins.zero,
+          padding: HtmlPaddings.only(left: 20),
+        ),
+        'ol': Style(
+          margin: Margins.zero,
+          padding: HtmlPaddings.only(left: 20),
+        ),
+        'li': Style(margin: Margins.only(bottom: 4)),
+      },
+    );
+  }
+
   String _stripHtml(String html) {
     return html
         .replaceAll(RegExp(r'<[^>]*>'), '')
         .replaceAll('&nbsp;', ' ')
+        .replaceAll('\u00A0', ' ')
         .replaceAll('&amp;', '&')
         .replaceAll('&lt;', '<')
         .replaceAll('&gt;', '>')

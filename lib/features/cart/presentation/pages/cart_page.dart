@@ -79,6 +79,9 @@ class _CartPageState extends State<CartPage> {
         if (!state.cart.hasCoupon) {
           _couponController.clear();
         }
+
+        if (ModalRoute.of(context)?.isCurrent != true) return;
+
         if (state.successMessage != null) {
           _showToast(
             context,
@@ -121,7 +124,7 @@ class _CartPageState extends State<CartPage> {
   Widget _buildNavigationBar(BuildContext context, bool isDark) {
     return Container(
       constraints: const BoxConstraints(minHeight: 48),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: isDark ? AppColors.neutral900 : AppColors.white,
       ),

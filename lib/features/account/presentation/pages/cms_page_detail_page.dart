@@ -3,6 +3,7 @@ import 'package:flutter_html/flutter_html.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/models/account_models.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// CMS Page Detail Page
 /// Displays the full content of a CMS page with HTML rendering
@@ -26,10 +27,7 @@ class CmsPageDetailPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: bgColor,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textColor),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        leading: const AppBackButton(),
         title: Text(
           page.displayTitle,
           style: TextStyle(

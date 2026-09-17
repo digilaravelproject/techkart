@@ -20,9 +20,9 @@ class AppBackButton extends StatefulWidget {
     super.key,
     this.onTap,
     this.color,
-    this.isIosStyle = true,
+    this.isIosStyle = false, // Changed to false per user request
     this.size = 24,
-    this.tapAreaSize = 60,
+    this.tapAreaSize = 40, // Reduced to match checkout page styling
   });
 
   @override
@@ -38,7 +38,7 @@ class _AppBackButtonState extends State<AppBackButton>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 100),
       vsync: this,
     );
 
@@ -56,11 +56,6 @@ class _AppBackButtonState extends State<AppBackButton>
   void _onPressed() {
     // Haptic feedback
     HapticFeedback.lightImpact();
-    
-    // Scale animation
-    _animationController.forward().then((_) {
-      _animationController.reverse();
-    });
 
     // Execute callback
     if (widget.onTap != null) {
@@ -83,8 +78,8 @@ class _AppBackButtonState extends State<AppBackButton>
         child: InkWell(
           onTap: _onPressed,
           borderRadius: BorderRadius.circular(widget.tapAreaSize / 2),
-          splashColor: iconColor.withOpacity(0.1),
-          highlightColor: iconColor.withOpacity(0.05),
+          splashColor: iconColor.withValues(alpha: 0.1),
+          highlightColor: iconColor.withValues(alpha: 0.05),
           onHighlightChanged: (isHighlighted) {
             if (isHighlighted) {
               _animationController.forward();
@@ -92,10 +87,9 @@ class _AppBackButtonState extends State<AppBackButton>
               _animationController.reverse();
             }
           },
-          child: Container(
+          child: SizedBox(
             width: widget.tapAreaSize,
             height: widget.tapAreaSize,
-            alignment: Alignment.center,
             child: Icon(
               widget.isIosStyle
                   ? Icons.arrow_back_ios_new

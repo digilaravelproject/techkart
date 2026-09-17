@@ -320,11 +320,18 @@ class _ProductDetailView extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.only(left: 0, right: 16),
+          padding: const EdgeInsetsDirectional.only(start: 0, end: 16),
           child: Row(
             children: [
-              // Back button
-              const AppBackButton(),
+              // Back button with increased tap area
+              const SizedBox(
+                width: 40,
+                child: OverflowBox(
+                  maxWidth: 60,
+                  maxHeight: 60,
+                  child: AppBackButton(tapAreaSize: 60),
+                ),
+              ),
 
               // Title
               Expanded(

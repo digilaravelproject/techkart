@@ -6,6 +6,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../data/models/account_models.dart';
 import '../bloc/edit_account_bloc.dart';
 import '../widgets/edit_account_form_field.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// Edit Account Page — Figma node-id=245-6502
 ///
@@ -258,22 +259,7 @@ class _EditAccountPageState extends State<EditAccountPage> {
       child: Row(
         children: [
           // Back arrow — Figma: arrow (I245:6607;103:1820)
-          Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            child: InkWell(
-              onTap: () => Navigator.of(context).pop(),
-              borderRadius: BorderRadius.circular(10),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Icon(
-                  Icons.arrow_back_ios_new,
-                  size: 24,
-                  color: isDark ? AppColors.neutral200 : AppColors.neutral900,
-                ),
-              ),
-            ),
-          ),
+          const AppBackButton(),
           // Title — Figma: center (I245:6607;103:1822)
           Expanded(
             child: Padding(

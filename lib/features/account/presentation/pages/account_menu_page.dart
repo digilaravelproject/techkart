@@ -27,6 +27,7 @@ import '../pages/reviews_page.dart';
 import '../pages/settings_bottom_sheet.dart';
 import '../pages/wishlist_page.dart';
 import '../widgets/account_menu_item.dart';
+import '../../../../core/widgets/app_back_button.dart';
 
 /// Account Menu Page — Figma node-id=220-6770
 ///
@@ -155,25 +156,7 @@ class _AccountMenuBody extends StatelessWidget {
       child: Row(
         children: [
           // Back arrow — Figma node: 220:7822
-          Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            child: InkWell(
-              onTap: () => Navigator.of(context).pop(),
-              borderRadius: BorderRadius.circular(10),
-              child: Tooltip(
-                message: l10n.accountBack,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(
-                    Icons.arrow_back_ios_new,
-                    size: 24,
-                    color: isDark ? AppColors.neutral200 : AppColors.neutral900,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const AppBackButton(),
           const SizedBox(width: 8),
 
           // Avatar circle — Figma node: 220:6794

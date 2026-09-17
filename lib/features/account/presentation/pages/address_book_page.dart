@@ -8,6 +8,7 @@ import '../../data/repository/account_repository.dart';
 import '../bloc/address_book_bloc.dart';
 import '../helpers/address_book_navigation_helpers.dart';
 import '../widgets/address_card.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import 'add_address_page.dart';
 
 /// Address Book Page — Figma node-id=204-4487
@@ -116,31 +117,7 @@ class AddressBookPage extends StatelessWidget {
       child: Row(
         children: [
           // Back arrow with a11y
-          Semantics(
-            button: true,
-            label: l10n.accountGoBack,
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-              child: InkWell(
-                onTap: () => Navigator.of(context).pop(),
-                borderRadius: BorderRadius.circular(10),
-                child: Tooltip(
-                  message: l10n.accountBack,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Icon(
-                      Icons.arrow_back_ios_new,
-                      size: 24,
-                      color: isDark
-                          ? AppColors.neutral200
-                          : AppColors.neutral900,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const AppBackButton(),
 
           // Title
           Expanded(

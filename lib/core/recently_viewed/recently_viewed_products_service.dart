@@ -33,7 +33,7 @@ class RecentlyViewedProductsService {
           .whereType<Map<String, dynamic>>()
           .map(HomeProduct.fromJson)
           .where(
-            (product) => product.name.isNotEmpty && product.urlKey.isNotEmpty,
+            (product) => product.name.isNotEmpty && product.urlKey.isNotEmpty && product.isSaleable,
           )
           .toList();
     } catch (_) {

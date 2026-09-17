@@ -9,6 +9,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../data/models/account_models.dart';
 import '../../data/repository/account_repository.dart';
 import '../bloc/address_book_bloc.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../utils/address_debug_payload.dart';
 import '../utils/address_state_field_behavior.dart';
 import '../widgets/address_form_field.dart';
@@ -487,31 +488,7 @@ class _AddAddressPageState extends State<AddAddressPage> {
       constraints: const BoxConstraints(minHeight: 48),
       child: Row(
         children: [
-          Semantics(
-            button: true,
-            label: l10n.accountGoBack,
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-              child: InkWell(
-                onTap: () => Navigator.of(context).pop(),
-                borderRadius: BorderRadius.circular(10),
-                child: Tooltip(
-                  message: l10n.accountBack,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Icon(
-                      Icons.arrow_back_ios_new,
-                      size: 24,
-                      color: isDark
-                          ? AppColors.neutral200
-                          : AppColors.neutral900,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const AppBackButton(),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),

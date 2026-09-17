@@ -21,6 +21,8 @@ class ProductActionBar extends StatelessWidget {
 
     return BlocListener<CartBloc, CartState>(
       listener: (context, cartState) {
+        if (ModalRoute.of(context)?.isCurrent != true) return;
+
         if (cartState.successMessage != null) {
           final message = _localizedCartMessage(
             context,

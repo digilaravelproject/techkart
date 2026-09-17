@@ -60,6 +60,8 @@ class CompareProductsPage extends StatelessWidget {
       ),
       body: BlocListener<CartBloc, CartState>(
         listener: (context, cartState) {
+          if (ModalRoute.of(context)?.isCurrent != true) return;
+
           if (cartState.errorMessage != null) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()

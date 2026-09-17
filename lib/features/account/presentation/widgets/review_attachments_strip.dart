@@ -3,6 +3,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../product/presentation/widgets/fullscreen_image_viewer.dart';
 import '../../data/models/review_attachment.dart';
 import '../pages/review_video_player_page.dart';
+import 'review_video_thumbnail.dart';
 
 /// Thumbnails of a review's photos and videos.
 /// Tap an image to zoom (all review images are swipeable),
@@ -52,16 +53,7 @@ class ReviewAttachmentsStrip extends StatelessWidget {
             ),
             clipBehavior: Clip.antiAlias,
             child: attachment.isVideo
-                ? Container(
-                    color: AppColors.neutral800,
-                    child: const Center(
-                      child: Icon(
-                        Icons.play_circle_fill,
-                        size: 28,
-                        color: AppColors.white,
-                      ),
-                    ),
-                  )
+                ? ReviewVideoThumbnail(url: attachment.url)
                 : Image.network(
                     attachment.url,
                     fit: BoxFit.cover,

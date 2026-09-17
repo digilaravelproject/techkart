@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -5,13 +7,22 @@ import '../../../../l10n/app_localizations.dart';
 
 /// Full-screen in-app player for a review video attachment.
 class ReviewVideoPlayerPage extends StatefulWidget {
-  final String url;
+  final String? url;
+  final File? file;
 
-  const ReviewVideoPlayerPage({super.key, required this.url});
+  const ReviewVideoPlayerPage({super.key, this.url, this.file})
+    : assert((url == null) != (file == null));
 
   static Future<void> navigate(BuildContext context, String url) {
     return Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => ReviewVideoPlayerPage(url: url)),
+    );
+  }
+
+  /// Play a picked (not yet uploaded) video.
+  static Future<void> navigateFile(BuildContext context, File file) {
+    return Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ReviewVideoPlayerPage(file: file)),
     );
   }
 
@@ -30,8 +41,9 @@ class _ReviewVideoPlayerPageState extends State<ReviewVideoPlayerPage> {
     _load(_controller);
   }
 
-  VideoPlayerController _createController() =>
-      VideoPlayerController.networkUrl(Uri.parse(widget.url));
+  VideoPlayerController _createController() => widget.file != null
+      ? VideoPlayerController.file(widget.file!)
+      : VideoPlayerController.networkUrl(Uri.parse(widget.url!));
 
   Future<void> _load(VideoPlayerController controller) async {
     try {

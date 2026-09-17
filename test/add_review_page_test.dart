@@ -56,6 +56,24 @@ void main() {
     expect(tester.testTextInput.isVisible, isFalse);
   });
 
+  testWidgets('scrolling the form keeps the keyboard open', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(_buildTestApp());
+
+    await tester.tap(find.byType(TextFormField).first);
+    await tester.pump();
+    expect(tester.testTextInput.isVisible, isTrue);
+
+    await tester.drag(
+      find.text('Arctic Frost Winter Accessories Bundle'),
+      const Offset(0, -200),
+    );
+    await tester.pump();
+
+    expect(tester.testTextInput.isVisible, isTrue);
+  });
+
   group('media attachments', () {
     late Directory dir;
 

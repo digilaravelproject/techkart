@@ -212,96 +212,99 @@ class _AddReviewPageState extends State<AddReviewPage> {
           final isSubmitting =
               state.status == AddReviewStatus.submitting;
 
-          return Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                // Scrollable form content
-                Expanded(
-                  child: SingleChildScrollView(
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
+          // A tap (not a scroll) anywhere outside a field closes the keyboard.
+          return GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+            child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    // Scrollable form content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 8),
 
-                        // ── Product Card ──
-                        _buildProductCard(context),
+                            // ── Product Card ──
+                            _buildProductCard(context),
 
-                        const SizedBox(height: 20),
+                            const SizedBox(height: 20),
 
-                        // ── Rating Section ──
-                        _buildRatingSection(context),
+                            // ── Rating Section ──
+                            _buildRatingSection(context),
 
-                        const SizedBox(height: 20),
+                            const SizedBox(height: 20),
 
-                        // ── Nick Name Field ──
-                        _buildTextField(
-                          context,
-                          label: l10n.accountNickName,
-                          isRequired: true,
-                          controller: _nickNameController,
-                          hintText: l10n.accountEnterYourName,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return l10n.accountNameRequired;
-                            }
-                            return null;
-                          },
+                            // ── Nick Name Field ──
+                            _buildTextField(
+                              context,
+                              label: l10n.accountNickName,
+                              isRequired: true,
+                              controller: _nickNameController,
+                              hintText: l10n.accountEnterYourName,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return l10n.accountNameRequired;
+                                }
+                                return null;
+                              },
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // ── Summary Field ──
+                            _buildTextField(
+                              context,
+                              label: l10n.accountSummary,
+                              isRequired: true,
+                              controller: _summaryController,
+                              hintText: l10n.accountReviewSummaryHint,
+                              maxLines: 3,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return l10n.accountSummaryRequired;
+                                }
+                                return null;
+                              },
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // ── Review Field ──
+                            _buildTextField(
+                              context,
+                              label: l10n.accountReview,
+                              isRequired: true,
+                              controller: _reviewController,
+                              hintText: l10n.accountDetailedReviewHint,
+                              maxLines: 5,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return l10n.accountReviewRequired;
+                                }
+                                return null;
+                              },
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // ── Photos & Videos ──
+                            _buildMediaSection(context, isSubmitting),
+
+                            const SizedBox(height: 24),
+                          ],
                         ),
-
-                        const SizedBox(height: 20),
-
-                        // ── Summary Field ──
-                        _buildTextField(
-                          context,
-                          label: l10n.accountSummary,
-                          isRequired: true,
-                          controller: _summaryController,
-                          hintText: l10n.accountReviewSummaryHint,
-                          maxLines: 3,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return l10n.accountSummaryRequired;
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // ── Review Field ──
-                        _buildTextField(
-                          context,
-                          label: l10n.accountReview,
-                          isRequired: true,
-                          controller: _reviewController,
-                          hintText: l10n.accountDetailedReviewHint,
-                          maxLines: 5,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return l10n.accountReviewRequired;
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // ── Photos & Videos ──
-                        _buildMediaSection(context, isSubmitting),
-
-                        const SizedBox(height: 24),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
 
-                // ── Submit Button (pinned at bottom) ──
-                _buildSubmitButton(context, isSubmitting),
-              ],
+                    // ── Submit Button (pinned at bottom) ──
+                    _buildSubmitButton(context, isSubmitting),
+                  ],
+                ),
             ),
           );
         },
@@ -467,8 +470,6 @@ class _AddReviewPageState extends State<AddReviewPage> {
           controller: controller,
           maxLines: maxLines,
           validator: validator,
-          // Tapping anywhere outside the field closes the keyboard.
-          onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
           style: TextStyle(
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w400,

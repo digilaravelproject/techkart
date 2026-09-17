@@ -1,14 +1,29 @@
+import 'package:bagisto_flutter/features/auth/data/repository/auth_repository.dart';
+import 'package:bagisto_flutter/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:bagisto_flutter/features/category/data/models/product_model.dart';
 import 'package:bagisto_flutter/features/product/presentation/widgets/product_info_section.dart';
 import 'package:bagisto_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 
 Widget _wrap(ProductModel product) => MaterialApp(
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
-  home: Scaffold(
-    body: SingleChildScrollView(child: ProductInfoSection(product: product)),
+  // The rating row shows "Add Review" for signed-in users via AuthBloc.
+  home: BlocProvider(
+    create: (_) => AuthBloc(
+      repository: AuthRepository(
+        client: GraphQLClient(
+          link: HttpLink('https://example.com/graphql'),
+          cache: GraphQLCache(store: InMemoryStore()),
+        ),
+      ),
+    ),
+    child: Scaffold(
+      body: SingleChildScrollView(child: ProductInfoSection(product: product)),
+    ),
   ),
 );
 

@@ -89,7 +89,7 @@ class CategoryBanner extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    title ?? 'Shop the Collection',
+                    title ?? '',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -98,7 +98,7 @@ class CategoryBanner extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle ?? 'Up to 50% off on selected items',
+                    subtitle ?? '',
                     style: TextStyle(
                       fontSize: 14,
                       color: _getSubtitleColor(isDark, hasImage: bannerUrl != null),

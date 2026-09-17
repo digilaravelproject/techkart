@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bagisto_flutter/features/account/data/models/account_models.dart';
 import 'package:bagisto_flutter/features/account/data/repository/account_repository.dart';
 import 'package:bagisto_flutter/features/account/presentation/bloc/add_review_bloc.dart';
@@ -74,6 +76,7 @@ class _FakeAccountRepository extends AccountRepository {
     required String comment,
     required int rating,
     required String name,
+    List<File> attachments = const [],
   }) async {
     createReviewCalls += 1;
     return ProductReview(

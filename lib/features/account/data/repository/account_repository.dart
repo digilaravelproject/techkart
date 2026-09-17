@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/error/error_mapper.dart';
@@ -5,6 +7,7 @@ import '../../../../core/graphql/account_queries.dart';
 import '../../../../core/graphql/returns_queries.dart';
 import '../models/account_models.dart';
 import '../models/returns_models.dart';
+import '../utils/review_attachment_encoder.dart';
 
 void _logAccountApiMessage(String message) {
   debugPrint(message);
@@ -997,6 +1000,8 @@ class AccountRepository {
   /// [comment] — full review text.
   /// [rating] — 1 to 5 star rating.
   /// [name] — reviewer's display name.
+  /// [attachments] — optional images/videos, sent as a JSON string of
+  /// Base64 data URIs. The key is omitted when the list is empty.
   /// Returns the created ProductReview.
   Future<ProductReview> createProductReview({
     required int productId,
@@ -1004,21 +1009,28 @@ class AccountRepository {
     required String comment,
     required int rating,
     required String name,
+    List<File> attachments = const [],
   }) async {
-    debugPrint('📝 AccountRepo.createProductReview (product=$productId)');
+    debugPrint(
+      '📝 AccountRepo.createProductReview '
+      '(product=$productId, attachments=${attachments.length})',
+    );
+
+    final input = <String, dynamic>{
+      'productId': productId,
+      'title': title,
+      'comment': comment,
+      'rating': rating,
+      'name': name,
+    };
+    if (attachments.isNotEmpty) {
+      input['attachments'] = await ReviewAttachmentEncoder.encode(attachments);
+    }
 
     final result = await client.mutate(
       MutationOptions(
         document: gql(AccountQueries.createProductReview),
-        variables: {
-          'input': {
-            'productId': productId,
-            'title': title,
-            'comment': comment,
-            'rating': rating,
-            'name': name,
-          },
-        },
+        variables: {'input': input},
       ),
     );
 

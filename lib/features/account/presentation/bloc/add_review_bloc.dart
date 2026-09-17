@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -21,6 +23,7 @@ class SubmitReview extends AddReviewEvent {
   final String comment;
   final int rating;
   final String name;
+  final List<File> attachments;
 
   const SubmitReview({
     required this.productId,
@@ -28,10 +31,18 @@ class SubmitReview extends AddReviewEvent {
     required this.comment,
     required this.rating,
     required this.name,
+    this.attachments = const [],
   });
 
   @override
-  List<Object?> get props => [productId, title, comment, rating, name];
+  List<Object?> get props => [
+    productId,
+    title,
+    comment,
+    rating,
+    name,
+    attachments.map((file) => file.path).toList(),
+  ];
 }
 
 /// Clear transient messages
@@ -102,6 +113,7 @@ class AddReviewBloc extends Bloc<AddReviewEvent, AddReviewState> {
         comment: event.comment,
         rating: event.rating,
         name: event.name,
+        attachments: event.attachments,
       );
 
       emit(

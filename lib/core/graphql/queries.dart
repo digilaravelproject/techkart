@@ -234,7 +234,7 @@ class ProductQueries {
           }
         }
       }
-      reviews: approvedReviews {
+      reviews {
         edges {
           node {
             rating
@@ -884,7 +884,7 @@ $slotFields
           }
         }
       }
-      reviews: approvedReviews {
+      reviews {
         edges {
           node {
             rating

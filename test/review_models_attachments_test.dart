@@ -71,17 +71,17 @@ void main() {
     expect(ProductQueries.getProductById, contains('attachments'));
   });
 
-  test('product detail queries read approvedReviews for public display', () {
-    // Product.reviews returns every status and null attachments on the
-    // server; approvedReviews is the documented public relation.
+  test('product detail queries read the product own reviews', () {
+    // approvedReviews ignores the product on the server and returns every
+    // approved review in the store, so the product's own reviews are used.
     final detailQueries = [
       ProductQueries.getProductByUrlKeyByType(null),
       ProductQueries.getProductByUrlKey,
       ProductQueries.getProductById,
     ];
     for (final query in detailQueries) {
-      expect(query, matches(RegExp(r'reviews\s*:\s*approvedReviews\s*\{')));
-      expect(query, isNot(matches(RegExp(r'(?<!:\s)\breviews\s*\{'))));
+      expect(query, matches(RegExp(r'\breviews\s*\{')));
+      expect(query, isNot(contains('approvedReviews')));
     }
   });
 }

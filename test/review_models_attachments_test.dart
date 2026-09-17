@@ -70,4 +70,18 @@ void main() {
     expect(ProductQueries.getProductByUrlKey, contains('attachments'));
     expect(ProductQueries.getProductById, contains('attachments'));
   });
+
+  test('product detail queries read approvedReviews for public display', () {
+    // Product.reviews returns every status and null attachments on the
+    // server; approvedReviews is the documented public relation.
+    final detailQueries = [
+      ProductQueries.getProductByUrlKeyByType(null),
+      ProductQueries.getProductByUrlKey,
+      ProductQueries.getProductById,
+    ];
+    for (final query in detailQueries) {
+      expect(query, matches(RegExp(r'reviews\s*:\s*approvedReviews\s*\{')));
+      expect(query, isNot(matches(RegExp(r'(?<!:\s)\breviews\s*\{'))));
+    }
+  });
 }

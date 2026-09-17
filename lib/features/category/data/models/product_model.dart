@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
 
+import '../../../account/data/models/review_attachment.dart';
+
 /// Product model matching Bagisto GraphQL schema
 /// Derived from: nextjs-commerce/src/graphql/catelog/fragments/Product.ts
 ///               nextjs-commerce/src/types/category/type.ts
@@ -1417,6 +1419,7 @@ class ProductReview {
   final String? title;
   final String? comment;
   final String? createdAt;
+  final List<ReviewAttachment> attachments;
 
   const ProductReview({
     required this.id,
@@ -1425,6 +1428,7 @@ class ProductReview {
     this.title,
     this.comment,
     this.createdAt,
+    this.attachments = const [],
   });
 
   factory ProductReview.fromJson(Map<String, dynamic> json) {
@@ -1437,6 +1441,7 @@ class ProductReview {
       title: json['title'] as String?,
       comment: json['comment'] as String?,
       createdAt: json['createdAt'] as String?,
+      attachments: ReviewAttachment.parseList(json['attachments']),
     );
   }
 

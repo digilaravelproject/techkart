@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
+import 'review_attachment.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/currency/currency_formatter.dart';
 
@@ -587,6 +588,7 @@ class ProductReview {
   final String? createdAt;
   final String? productName;
   final String? productImageUrl;
+  final List<ReviewAttachment> attachments;
 
   const ProductReview({
     this.id,
@@ -599,6 +601,7 @@ class ProductReview {
     this.createdAt,
     this.productName,
     this.productImageUrl,
+    this.attachments = const [],
   });
 
   factory ProductReview.fromJson(Map<String, dynamic> json) {
@@ -653,6 +656,7 @@ class ProductReview {
       createdAt: json['createdAt']?.toString(),
       productName: pName,
       productImageUrl: pImage,
+      attachments: ReviewAttachment.parseList(json['attachments']),
     );
   }
 

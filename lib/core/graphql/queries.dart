@@ -242,6 +242,7 @@ class ProductQueries {
             name
             title
             comment
+            attachments
             createdAt
           }
         }
@@ -891,6 +892,7 @@ $slotFields
             name
             title
             comment
+            attachments
             createdAt
           }
         }

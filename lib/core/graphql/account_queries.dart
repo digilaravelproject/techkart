@@ -80,6 +80,7 @@ class AccountQueries {
             title
             rating
             comment
+            attachments
             status
             createdAt
             updatedAt
@@ -674,6 +675,7 @@ class AccountQueries {
           title
           rating
           comment
+          attachments
           status
           createdAt
           updatedAt

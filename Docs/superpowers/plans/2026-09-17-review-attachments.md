@@ -13,7 +13,7 @@ Spec: `Docs/superpowers/specs/2026-09-17-review-attachments-design.md`
 ## Global Constraints
 
 - Server: `https://test-delivery.bagisto.com/api/graphql` (set locally in `lib/core/constants/api_constants.dart`). **Never stage or commit `lib/core/constants/api_constants.dart`** or `lib/features/category/presentation/widgets/category_banner.dart` (pre-existing local changes). Always `git add` explicit paths.
-- Server schema verified: `ProductReview.attachments: String`, `createProductReviewInput.attachments: String`.
+- Server schema verified: `ProductReview.attachments: String`, `createProductReviewInput.attachments: String`. `CustomerReview` (used by `getCustomerReviews`) has **no** `attachments` field: do not request it there, and do not add the strip to the account dashboard reviews section (it only shows customer reviews).
 - Attachments input: JSON **string** of an array of `data:{MIME};base64,{DATA}`; MIME `image/*` or `video/*`.
 - Max 5 files per review; max 5 MB (`5 * 1024 * 1024` bytes) per file.
 - Omit the `attachments` key entirely when no files are attached.

@@ -33,8 +33,10 @@ class CategoryRepository {
     final data = result.data?['treeCategories'] as List<dynamic>?;
     if (data == null) return [];
 
+    // Server filters inactive categories here; filter again in case it stops.
     return data
         .map((json) => CategoryModel.fromTreeJson(json as Map<String, dynamic>))
+        .where((category) => category.isActive)
         .toList();
   }
 
@@ -54,12 +56,14 @@ class CategoryRepository {
 
     final edges = result.data?['categories']?['edges'] as List<dynamic>? ?? [];
 
+    // The `categories` query also returns categories disabled in admin.
     return edges
         .map(
           (edge) => CategoryModel.fromHomeCategoryJson(
             edge['node'] as Map<String, dynamic>,
           ),
         )
+        .where((category) => category.isActive)
         .toList();
   }
 

@@ -12,7 +12,9 @@ import 'package:http/testing.dart';
 GraphQLClient _client(Map<String, dynamic> data) {
   final httpClient = MockClient(
     (_) async => http.Response(
-      jsonEncode({'data': data}),
+      jsonEncode({
+        'data': {'__typename': 'Query', ...data},
+      }),
       200,
       headers: {'content-type': 'application/json'},
     ),

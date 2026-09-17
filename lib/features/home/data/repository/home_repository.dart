@@ -2,6 +2,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/locale/locale_cubit.dart';
 import '../../../../core/graphql/queries.dart';
+import '../../../category/data/models/category_model.dart';
 import '../models/home_models.dart';
 
 /// Repository that fetches all data needed for the homepage.
@@ -62,7 +63,9 @@ class HomeRepository {
     }
 
     final edges = result.data?['categories']?['edges'] as List? ?? [];
+    // The `categories` query also returns categories disabled in admin.
     return edges
+        .where((e) => CategoryModel.isActiveStatus(e['node']?['status']))
         .map((e) => HomeCategory.fromJson(e['node'] as Map<String, dynamic>))
         .where((c) => c.numericId != 1) // exclude root category
         .toList()

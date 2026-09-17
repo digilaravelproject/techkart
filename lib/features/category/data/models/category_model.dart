@@ -28,7 +28,16 @@ class CategoryModel {
   String get slug => translation?.slug ?? '';
   String get urlPath => translation?.urlPath ?? '';
   String? get imageUrl => logoUrl ?? logoPath;
-  bool get isActive => status == '1';
+  bool get isActive => isActiveStatus(status);
+
+  /// Category status from the API: "1"/1/true = active, "0"/0/false =
+  /// inactive. A missing status is treated as active.
+  static bool isActiveStatus(dynamic status) {
+    if (status == null) return true;
+    if (status is bool) return status;
+    final value = status.toString().trim().toLowerCase();
+    return value == '1' || value == 'true';
+  }
 
   /// Factory for treeCategories response
   factory CategoryModel.fromTreeJson(Map<String, dynamic> json) {
@@ -42,6 +51,7 @@ class CategoryModel {
             .where((e) => e['node'] != null)
             .map((e) =>
                 CategoryModel.fromTreeJson(e['node'] as Map<String, dynamic>))
+            .where((child) => child.isActive)
             .toList();
       }
     }
@@ -69,6 +79,7 @@ class CategoryModel {
       numericId: json['_id'] as int?,
       logoUrl: json['logoUrl'] as String?,
       position: json['position'] as int?,
+      status: json['status']?.toString(),
       translation: json['translation'] != null
           ? CategoryTranslation.fromJson(
               json['translation'] as Map<String, dynamic>)

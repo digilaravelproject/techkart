@@ -113,6 +113,7 @@ class CategoryQueries {
             _id
             logoUrl
             position
+            status
             translation {
               name
               slug

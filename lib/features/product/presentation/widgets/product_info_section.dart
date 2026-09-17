@@ -3,6 +3,10 @@ import 'package:flutter_html/flutter_html.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../category/data/models/product_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../account/presentation/pages/add_review_page.dart';
+import '../bloc/product_detail_bloc.dart';
 
 /// Product info: title, price row, short description, rating badge +
 /// review count, stock chip
@@ -167,9 +171,80 @@ class ProductInfoSection extends StatelessWidget {
   }
 
   Widget _buildRatingGroup(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final rating = product.averageRating;
     final count = product.reviewCount;
+
+    if (count == 0) {
+      return Row(
+        children: [
+          Icon(Icons.star_border, size: 18, color: isDark ? AppColors.neutral400 : AppColors.neutral500),
+          const SizedBox(width: 4),
+          Text(
+            l10n.productNoReviewsYet,
+            style: TextStyle(
+              fontFamily: 'Roboto',
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: isDark ? AppColors.neutral400 : AppColors.neutral500,
+            ),
+          ),
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              if (authState is! AuthAuthenticated) {
+                return const SizedBox.shrink();
+              }
+              return Row(
+                children: [
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () async {
+                      final productId = product.numericId;
+                      if (productId == null) return;
+
+                      final submitted = await AddReviewPage.navigate(
+                        context,
+                        productId: productId,
+                        productName: product.name ?? l10n.productDefaultName,
+                        productImageUrl: product.baseImageUrl,
+                      );
+
+                      if (submitted == true && context.mounted) {
+                        final urlKey = product.urlKey;
+                        if (urlKey != null) {
+                          context.read<ProductDetailBloc>().add(
+                                LoadProductDetail(
+                                  urlKey: urlKey,
+                                  productType: product.type,
+                                ),
+                              );
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(l10n.productReviewSubmitted),
+                            backgroundColor: AppColors.successGreen,
+                          ),
+                        );
+                      }
+                    },
+                    child: Text(
+                      '•  ${l10n.accountAddReview}',
+                      style: TextStyle(
+                        fontFamily: 'Roboto',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary500,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      );
+    }
 
     return Row(
       children: [

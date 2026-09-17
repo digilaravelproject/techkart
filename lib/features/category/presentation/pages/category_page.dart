@@ -92,49 +92,79 @@ class CategoryPage extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 12),
+                    children: state.categories.isEmpty
+                        ? [
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.6,
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.category_outlined,
+                                      size: 64,
+                                      color: isDark
+                                          ? AppColors.neutral700
+                                          : AppColors.neutral300,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No categories found',
+                                      style: AppTextStyles.text4(context).copyWith(
+                                        color: isDark
+                                            ? AppColors.neutral500
+                                            : AppColors.neutral600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ]
+                        : [
+                            const SizedBox(height: 12),
 
-                      // ── Category Chips (horizontal scroll) ──
-                      CategoryChipRow(
-                        categories: state.categories,
-                        selectedCategory: state.selectedCategory,
-                        onCategorySelected: (cat) {
-                          context
-                              .read<CategoryBloc>()
-                              .add(SelectCategory(cat));
-                        },
-                      ),
+                            // ── Category Chips (horizontal scroll) ──
+                            CategoryChipRow(
+                              categories: state.categories,
+                              selectedCategory: state.selectedCategory,
+                              onCategorySelected: (cat) {
+                                context
+                                    .read<CategoryBloc>()
+                                    .add(SelectCategory(cat));
+                              },
+                            ),
 
-                      const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                      // ── Banner (dynamic from API) ──
-                      if (state.selectedCategory?.bannerUrl != null &&
-                          state.selectedCategory!.bannerUrl!.isNotEmpty)
-                        CategoryBanner(
-                          bannerUrl: state.selectedCategory?.bannerUrl,
-                          title: state.selectedCategory?.name,
-                        ),
+                            // ── Banner (dynamic from API) ──
+                            if (state.selectedCategory?.bannerUrl != null &&
+                                state.selectedCategory!.bannerUrl!.isNotEmpty)
+                              CategoryBanner(
+                                bannerUrl: state.selectedCategory?.bannerUrl,
+                                title: state.selectedCategory?.name,
+                              ),
 
-                      if (state.selectedCategory?.bannerUrl != null &&
-                          state.selectedCategory!.bannerUrl!.isNotEmpty)
-                        const SizedBox(height: 32),
+                            if (state.selectedCategory?.bannerUrl != null &&
+                                state.selectedCategory!.bannerUrl!.isNotEmpty)
+                              const SizedBox(height: 32),
 
-                      // ── Sub-category Sections ──
-                      ..._buildSubCategorySections(context, state.subCategories),
+                            // ── Sub-category Sections ──
+                            ..._buildSubCategorySections(
+                                context, state.subCategories),
 
-                      if (state.subCategories.isNotEmpty)
-                        const SizedBox(height: 24),
+                            if (state.subCategories.isNotEmpty)
+                              const SizedBox(height: 24),
 
-                      // ── Products Grid ──
-                      ProductGridSection(
-                        products: state.products,
-                        isLoadingMore: state.isLoadingMore,
-                        categoryId: state.selectedCategory?.numericId,
-                        categoryName: state.selectedCategory?.name,
-                        categorySlug: state.selectedCategory?.slug,
-                      ),
-                    ],
+                            // ── Products Grid ──
+                            ProductGridSection(
+                              products: state.products,
+                              isLoadingMore: state.isLoadingMore,
+                              categoryId: state.selectedCategory?.numericId,
+                              categoryName: state.selectedCategory?.name,
+                              categorySlug: state.selectedCategory?.slug,
+                            ),
+                          ],
                   ),
                 ),
               ),

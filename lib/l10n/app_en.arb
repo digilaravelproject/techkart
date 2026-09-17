@@ -832,5 +832,21 @@
         "type": "int"
       }
     }
-  }
+  },
+  "accountReviewPhotosVideos": "Photos & Videos",
+  "accountReviewAddMedia": "Add",
+  "accountReviewGallery": "Gallery",
+  "accountReviewCamera": "Camera",
+  "accountReviewMaxFiles": "You can attach up to {count} files",
+  "@accountReviewMaxFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountReviewFileTooLarge": "Each file must be 5 MB or smaller",
+  "accountReviewUnsupportedFile": "Only images and videos are supported",
+  "accountReviewPickFailed": "Could not add media. Please try again",
+  "accountReviewVideoLoadFailed": "Unable to play this video"
 }

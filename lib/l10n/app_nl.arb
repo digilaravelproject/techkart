@@ -801,5 +801,14 @@
   "accountAddressTypeCustomer": "Customer",
   "cartAddedToCartSuccess": "Product added to cart successfully",
   "productSelectDownloadLink": "Please select at least one link",
-  "wishlistItemRemoved": "Item removed from wishlist"
+  "wishlistItemRemoved": "Item removed from wishlist",
+  "accountReviewPhotosVideos": "Foto's en video's",
+  "accountReviewAddMedia": "Toevoegen",
+  "accountReviewGallery": "Galerij",
+  "accountReviewCamera": "Camera",
+  "accountReviewMaxFiles": "Je kunt maximaal {count} bestanden toevoegen",
+  "accountReviewFileTooLarge": "Elk bestand mag maximaal 5 MB zijn",
+  "accountReviewUnsupportedFile": "Alleen afbeeldingen en video's worden ondersteund",
+  "accountReviewPickFailed": "Media kon niet worden toegevoegd. Probeer het opnieuw",
+  "accountReviewVideoLoadFailed": "Deze video kan niet worden afgespeeld"
 }

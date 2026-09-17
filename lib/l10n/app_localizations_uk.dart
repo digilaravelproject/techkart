@@ -1860,4 +1860,36 @@ class AppLocalizationsUk extends AppLocalizations {
   String accountShippedQtyValue(int qty) {
     return 'Відправлено : $qty';
   }
+
+  @override
+  String get accountReviewPhotosVideos => 'Фото та відео';
+
+  @override
+  String get accountReviewAddMedia => 'Додати';
+
+  @override
+  String get accountReviewGallery => 'Галерея';
+
+  @override
+  String get accountReviewCamera => 'Камера';
+
+  @override
+  String accountReviewMaxFiles(int count) {
+    return 'Можна прикріпити не більше $count файлів';
+  }
+
+  @override
+  String get accountReviewFileTooLarge =>
+      'Розмір кожного файлу не повинен перевищувати 5 МБ';
+
+  @override
+  String get accountReviewUnsupportedFile =>
+      'Підтримуються лише зображення та відео';
+
+  @override
+  String get accountReviewPickFailed =>
+      'Не вдалося додати медіафайл. Спробуйте ще раз';
+
+  @override
+  String get accountReviewVideoLoadFailed => 'Не вдалося відтворити це відео';
 }

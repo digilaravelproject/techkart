@@ -1855,4 +1855,35 @@ class AppLocalizationsTr extends AppLocalizations {
   String accountShippedQtyValue(int qty) {
     return 'Gönderilen Adet : $qty';
   }
+
+  @override
+  String get accountReviewPhotosVideos => 'Fotoğraflar ve Videolar';
+
+  @override
+  String get accountReviewAddMedia => 'Ekle';
+
+  @override
+  String get accountReviewGallery => 'Galeri';
+
+  @override
+  String get accountReviewCamera => 'Kamera';
+
+  @override
+  String accountReviewMaxFiles(int count) {
+    return 'En fazla $count dosya ekleyebilirsiniz';
+  }
+
+  @override
+  String get accountReviewFileTooLarge => 'Her dosya en fazla 5 MB olmalıdır';
+
+  @override
+  String get accountReviewUnsupportedFile =>
+      'Yalnızca görseller ve videolar desteklenir';
+
+  @override
+  String get accountReviewPickFailed =>
+      'Medya eklenemedi. Lütfen tekrar deneyin';
+
+  @override
+  String get accountReviewVideoLoadFailed => 'Bu video oynatılamıyor';
 }

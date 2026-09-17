@@ -801,5 +801,14 @@
   "accountAddressTypeCustomer": "Customer",
   "cartAddedToCartSuccess": "Product added to cart successfully",
   "productSelectDownloadLink": "Please select at least one link",
-  "wishlistItemRemoved": "Item removed from wishlist"
+  "wishlistItemRemoved": "Item removed from wishlist",
+  "accountReviewPhotosVideos": "Fotos & Videos",
+  "accountReviewAddMedia": "Hinzufügen",
+  "accountReviewGallery": "Galerie",
+  "accountReviewCamera": "Kamera",
+  "accountReviewMaxFiles": "Sie können bis zu {count} Dateien anhängen",
+  "accountReviewFileTooLarge": "Jede Datei darf höchstens 5 MB groß sein",
+  "accountReviewUnsupportedFile": "Nur Bilder und Videos werden unterstützt",
+  "accountReviewPickFailed": "Medien konnten nicht hinzugefügt werden. Bitte versuchen Sie es erneut",
+  "accountReviewVideoLoadFailed": "Dieses Video kann nicht abgespielt werden"
 }

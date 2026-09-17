@@ -801,5 +801,14 @@
   "accountAddressTypeCustomer": "Customer",
   "cartAddedToCartSuccess": "Product added to cart successfully",
   "productSelectDownloadLink": "Please select at least one link",
-  "wishlistItemRemoved": "Item removed from wishlist"
+  "wishlistItemRemoved": "Item removed from wishlist",
+  "accountReviewPhotosVideos": "Fotoğraflar ve Videolar",
+  "accountReviewAddMedia": "Ekle",
+  "accountReviewGallery": "Galeri",
+  "accountReviewCamera": "Kamera",
+  "accountReviewMaxFiles": "En fazla {count} dosya ekleyebilirsiniz",
+  "accountReviewFileTooLarge": "Her dosya en fazla 5 MB olmalıdır",
+  "accountReviewUnsupportedFile": "Yalnızca görseller ve videolar desteklenir",
+  "accountReviewPickFailed": "Medya eklenemedi. Lütfen tekrar deneyin",
+  "accountReviewVideoLoadFailed": "Bu video oynatılamıyor"
 }

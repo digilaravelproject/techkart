@@ -1875,4 +1875,37 @@ class AppLocalizationsDe extends AppLocalizations {
   String accountShippedQtyValue(int qty) {
     return 'Versendete Menge : $qty';
   }
+
+  @override
+  String get accountReviewPhotosVideos => 'Fotos & Videos';
+
+  @override
+  String get accountReviewAddMedia => 'Hinzufügen';
+
+  @override
+  String get accountReviewGallery => 'Galerie';
+
+  @override
+  String get accountReviewCamera => 'Kamera';
+
+  @override
+  String accountReviewMaxFiles(int count) {
+    return 'Sie können bis zu $count Dateien anhängen';
+  }
+
+  @override
+  String get accountReviewFileTooLarge =>
+      'Jede Datei darf höchstens 5 MB groß sein';
+
+  @override
+  String get accountReviewUnsupportedFile =>
+      'Nur Bilder und Videos werden unterstützt';
+
+  @override
+  String get accountReviewPickFailed =>
+      'Medien konnten nicht hinzugefügt werden. Bitte versuchen Sie es erneut';
+
+  @override
+  String get accountReviewVideoLoadFailed =>
+      'Dieses Video kann nicht abgespielt werden';
 }

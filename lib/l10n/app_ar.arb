@@ -799,5 +799,14 @@
         "type": "int"
       }
     }
-  }
+  },
+  "accountReviewPhotosVideos": "الصور ومقاطع الفيديو",
+  "accountReviewAddMedia": "إضافة",
+  "accountReviewGallery": "المعرض",
+  "accountReviewCamera": "الكاميرا",
+  "accountReviewMaxFiles": "يمكنك إرفاق {count} ملفات كحد أقصى",
+  "accountReviewFileTooLarge": "يجب ألا يتجاوز حجم كل ملف 5 ميغابايت",
+  "accountReviewUnsupportedFile": "يتم دعم الصور ومقاطع الفيديو فقط",
+  "accountReviewPickFailed": "تعذرت إضافة الوسائط. يرجى المحاولة مرة أخرى",
+  "accountReviewVideoLoadFailed": "تعذر تشغيل هذا الفيديو"
 }

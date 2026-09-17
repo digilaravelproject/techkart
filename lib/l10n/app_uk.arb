@@ -614,5 +614,14 @@
   "accountAddressTypeCustomer": "Customer",
   "cartAddedToCartSuccess": "Product added to cart successfully",
   "productSelectDownloadLink": "Please select at least one link",
-  "wishlistItemRemoved": "Item removed from wishlist"
+  "wishlistItemRemoved": "Item removed from wishlist",
+  "accountReviewPhotosVideos": "Фото та відео",
+  "accountReviewAddMedia": "Додати",
+  "accountReviewGallery": "Галерея",
+  "accountReviewCamera": "Камера",
+  "accountReviewMaxFiles": "Можна прикріпити не більше {count} файлів",
+  "accountReviewFileTooLarge": "Розмір кожного файлу не повинен перевищувати 5 МБ",
+  "accountReviewUnsupportedFile": "Підтримуються лише зображення та відео",
+  "accountReviewPickFailed": "Не вдалося додати медіафайл. Спробуйте ще раз",
+  "accountReviewVideoLoadFailed": "Не вдалося відтворити це відео"
 }

@@ -801,5 +801,14 @@
   "accountAddressTypeCustomer": "Customer",
   "cartAddedToCartSuccess": "Product added to cart successfully",
   "productSelectDownloadLink": "Please select at least one link",
-  "wishlistItemRemoved": "Item removed from wishlist"
+  "wishlistItemRemoved": "Item removed from wishlist",
+  "accountReviewPhotosVideos": "Fotos y videos",
+  "accountReviewAddMedia": "Añadir",
+  "accountReviewGallery": "Galería",
+  "accountReviewCamera": "Cámara",
+  "accountReviewMaxFiles": "Puedes adjuntar hasta {count} archivos",
+  "accountReviewFileTooLarge": "Cada archivo debe pesar 5 MB o menos",
+  "accountReviewUnsupportedFile": "Solo se admiten imágenes y videos",
+  "accountReviewPickFailed": "No se pudo añadir el contenido. Inténtalo de nuevo",
+  "accountReviewVideoLoadFailed": "No se puede reproducir este video"
 }

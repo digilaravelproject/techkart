@@ -3497,6 +3497,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shipped Qty : {qty}'**
   String accountShippedQtyValue(int qty);
+
+  /// No description provided for @accountReviewPhotosVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos & Videos'**
+  String get accountReviewPhotosVideos;
+
+  /// No description provided for @accountReviewAddMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get accountReviewAddMedia;
+
+  /// No description provided for @accountReviewGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get accountReviewGallery;
+
+  /// No description provided for @accountReviewCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get accountReviewCamera;
+
+  /// No description provided for @accountReviewMaxFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'You can attach up to {count} files'**
+  String accountReviewMaxFiles(int count);
+
+  /// No description provided for @accountReviewFileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Each file must be 5 MB or smaller'**
+  String get accountReviewFileTooLarge;
+
+  /// No description provided for @accountReviewUnsupportedFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Only images and videos are supported'**
+  String get accountReviewUnsupportedFile;
+
+  /// No description provided for @accountReviewPickFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add media. Please try again'**
+  String get accountReviewPickFailed;
+
+  /// No description provided for @accountReviewVideoLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to play this video'**
+  String get accountReviewVideoLoadFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -6,8 +6,8 @@ import '../../data/models/home_models.dart';
 
 /// Auto-scrolling banner carousel with dot indicators.
 ///
-/// Keeps home banners fully visible by adapting the height to the
-/// active image's aspect ratio while preserving rounded corners.
+/// Banners always use the storefront banner ratio (1920x700, about 2.74:1)
+/// so the app shows them exactly like the web, on every screen width.
 class ImageCarousel extends StatefulWidget {
   final List<BannerImage> images;
   final String baseUrl;
@@ -19,15 +19,13 @@ class ImageCarousel extends StatefulWidget {
 }
 
 class _ImageCarouselState extends State<ImageCarousel> {
-  static const double _fallbackAspectRatio = 16 / 9;
-  static const double _minBannerHeight = 120;
-  static const double _maxBannerHeight = 220;
+  /// Bagisto storefront banner size: 1920x700.
+  static const double bannerAspectRatio = 1920 / 700;
+  static const double _horizontalPadding = 20;
 
   late final PageController _pageController;
   Timer? _autoPlayTimer;
   int _currentPage = 0;
-  final Map<String, double> _aspectRatios = <String, double>{};
-  final Set<String> _resolvingUrls = <String>{};
 
   @override
   void initState() {
@@ -37,25 +35,15 @@ class _ImageCarouselState extends State<ImageCarousel> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _cacheBannerAspectRatios();
-  }
-
-  @override
   void didUpdateWidget(covariant ImageCarousel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.images == widget.images &&
-        oldWidget.baseUrl == widget.baseUrl) {
-      return;
-    }
+    if (oldWidget.images == widget.images) return;
 
     _autoPlayTimer?.cancel();
     _currentPage = widget.images.isEmpty
         ? 0
-        : (_currentPage.clamp(0, widget.images.length - 1) as int);
+        : _currentPage.clamp(0, widget.images.length - 1);
     _startAutoPlay();
-    _cacheBannerAspectRatios();
   }
 
   @override
@@ -78,60 +66,11 @@ class _ImageCarouselState extends State<ImageCarousel> {
     });
   }
 
-  void _cacheBannerAspectRatios() {
-    if (!mounted) return;
-    final imageConfiguration = createLocalImageConfiguration(context);
-
-    for (final banner in widget.images) {
-      final url = _bannerUrl(banner);
-      if (url.isEmpty ||
-          _aspectRatios.containsKey(url) ||
-          _resolvingUrls.contains(url)) {
-        continue;
-      }
-
-      _resolvingUrls.add(url);
-      final imageProvider = NetworkImage(url);
-      final imageStream = imageProvider.resolve(imageConfiguration);
-      late final ImageStreamListener listener;
-      listener = ImageStreamListener(
-        (imageInfo, _) {
-          imageStream.removeListener(listener);
-          _resolvingUrls.remove(url);
-
-          final width = imageInfo.image.width.toDouble();
-          final height = imageInfo.image.height.toDouble();
-          if (!mounted || width <= 0 || height <= 0) return;
-
-          setState(() {
-            _aspectRatios[url] = width / height;
-          });
-        },
-        onError: (exception, stackTrace) {
-          imageStream.removeListener(listener);
-          _resolvingUrls.remove(url);
-        },
-      );
-      imageStream.addListener(listener);
-    }
-  }
-
   String _bannerUrl(BannerImage banner) {
     final effectiveBaseUrl = widget.baseUrl.isNotEmpty
         ? widget.baseUrl
         : Uri.parse(bagistoEndpoint).origin;
     return banner.fullImageUrl(effectiveBaseUrl);
-  }
-
-  double _currentAspectRatio() {
-    if (widget.images.isEmpty) return _fallbackAspectRatio;
-    final safeIndex = _currentPage.clamp(0, widget.images.length - 1) as int;
-    final currentBanner = widget.images[safeIndex];
-    final aspectRatio = _aspectRatios[_bannerUrl(currentBanner)];
-    if (aspectRatio == null || !aspectRatio.isFinite || aspectRatio <= 0) {
-      return _fallbackAspectRatio;
-    }
-    return aspectRatio;
   }
 
   @override
@@ -141,58 +80,53 @@ class _ImageCarouselState extends State<ImageCarousel> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final availableWidth = (constraints.maxWidth - 40)
+        final imageWidth = (constraints.maxWidth - _horizontalPadding * 2)
             .clamp(0.0, double.infinity)
             .toDouble();
-        final computedHeight = availableWidth / _currentAspectRatio();
-        final carouselHeight = computedHeight
-            .clamp(_minBannerHeight, _maxBannerHeight)
-            .toDouble();
+        final carouselHeight = imageWidth / bannerAspectRatio;
 
         return Column(
           children: [
-            AnimatedSize(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              child: SizedBox(
-                height: carouselHeight,
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: widget.images.length,
-                  onPageChanged: (index) {
-                    setState(() => _currentPage = index);
-                  },
-                  itemBuilder: (context, index) {
-                    final banner = widget.images[index];
-                    final url = _bannerUrl(banner);
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: ColoredBox(
-                          color: isDark
-                              ? AppColors.neutral800
-                              : AppColors.neutral100,
-                          child: Image.network(
-                            url,
-                            fit: BoxFit.contain,
-                            width: double.infinity,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Center(
-                                  child: Icon(
-                                    Icons.image_outlined,
-                                    size: 48,
-                                    color: isDark
-                                        ? AppColors.neutral500
-                                        : AppColors.neutral400,
-                                  ),
-                                ),
+            SizedBox(
+              height: carouselHeight,
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: widget.images.length,
+                onPageChanged: (index) {
+                  setState(() => _currentPage = index);
+                },
+                itemBuilder: (context, index) {
+                  final url = _bannerUrl(widget.images[index]);
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: _horizontalPadding,
+                    ),
+                    child: ClipRRect(
+                      key: const ValueKey('home_banner_image_area'),
+                      borderRadius: BorderRadius.circular(12),
+                      child: ColoredBox(
+                        color: isDark
+                            ? AppColors.neutral800
+                            : AppColors.neutral100,
+                        child: Image.network(
+                          url,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
+                          errorBuilder: (context, error, stackTrace) => Center(
+                            child: Icon(
+                              Icons.image_outlined,
+                              size: 48,
+                              color: isDark
+                                  ? AppColors.neutral500
+                                  : AppColors.neutral400,
+                            ),
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               ),
             ),
             if (widget.images.length > 1) ...[

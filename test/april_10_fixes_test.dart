@@ -56,7 +56,7 @@ void main() {
     );
 
     testWidgets(
-      'image carousel uses contain fit inside an animated height wrapper',
+      'image carousel uses contain fit so banners are never cropped',
       (tester) async {
         await tester.pumpWidget(
           const _TestApp(
@@ -78,7 +78,8 @@ void main() {
           ),
         );
 
-        expect(find.byType(AnimatedSize), findsOneWidget);
+        // Height is fixed to the 1920:700 storefront banner ratio
+        // (see image_carousel_ratio_test.dart), so no AnimatedSize.
         expect(image.fit, BoxFit.contain);
       },
     );

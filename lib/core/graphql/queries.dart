@@ -102,6 +102,58 @@ class CategoryQueries {
     }
   ''';
 
+  /// Categories tab – Bagisto `categories` (Get Categories) query.
+  /// Flat, paginated list (max 100 per page) with parent and children so the
+  /// app can pick top-level categories and their sub-categories.
+  static const String getCategoryTabCategories = r'''
+    query CategoryTabCategories($first: Int, $after: String) {
+      categories(first: $first, after: $after) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        edges {
+          node {
+            id
+            _id
+            position
+            status
+            logoUrl
+            bannerUrl
+            parent {
+              id
+              _id
+            }
+            translation {
+              id
+              name
+              slug
+              urlPath
+            }
+            children {
+              edges {
+                node {
+                  id
+                  _id
+                  position
+                  status
+                  logoUrl
+                  bannerUrl
+                  translation {
+                    id
+                    name
+                    slug
+                    urlPath
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ''';
+
   /// GET_HOME_CATEGORIES – flat list with logo
   /// Source: nextjs-commerce/src/graphql/catelog/queries/HomeCategories.ts
   static const String getHomeCategories = r'''

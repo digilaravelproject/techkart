@@ -443,36 +443,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // The API returns sections in sortOrder, so we render them in that order
     final List<Widget> sections = [];
 
-    // Add category carousel first (always at top)
-    if (state.categories.isNotEmpty) {
-      sections.add(
-        CategoryCarousel(
-          categories: state.categories,
-          onCategoryTap: (category) => _openCategoryProducts(context, category),
-        ),
-      );
-    }
-
-    // Add Featured Products section with 6-product grid (randomized)
-    final allFeaturedProducts = <HomeProduct>[];
-    for (final entry in state.productSections.entries) {
-      final tc = state.customizations
-          .where((c) => c.id == entry.key)
-          .firstOrNull;
-      if (tc != null && tc.name.toLowerCase().contains('featured')) {
-        allFeaturedProducts.addAll(entry.value);
-      }
-    }
-    if (allFeaturedProducts.isNotEmpty) {
-      sections.add(
-        _buildFeaturedProductsGridSection(
-          context: context,
-          title: l10n.homeFeaturedProducts,
-          products: allFeaturedProducts,
-        ),
-      );
-    }
-
     // Process each customization in sortOrder
     for (final tc in state.customizations) {
       switch (tc.type) {
@@ -525,7 +495,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           break;
 
         case 'category_carousel':
-          // Category carousel is handled separately at the top
+          if (state.categories.isNotEmpty) {
+            sections.add(
+              CategoryCarousel(
+                categories: state.categories,
+                onCategoryTap: (category) =>
+                    _openCategoryProducts(context, category),
+              ),
+            );
+          }
           break;
       }
     }

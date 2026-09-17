@@ -132,11 +132,8 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     const maxAttempts = 3;
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        // Fetch tree categories (already includes children)
-        final treeCategories = await repository.getTreeCategories();
-
-        // Use tree categories as the main list
-        final categories = treeCategories;
+        // Top-level categories from the `categories` API (with children)
+        final categories = await repository.getCategoryTabCategories();
 
         CategoryModel? selected;
         List<CategoryModel> subCats = [];

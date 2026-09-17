@@ -40,6 +40,58 @@ class CategoryRepository {
         .toList();
   }
 
+  /// Root category of the default channel. Its children are the storefront's
+  /// main categories; the root itself is never shown.
+  static const int rootCategoryId = 1;
+
+  /// Categories tab: all categories from the `categories` query, keeping
+  /// active top-level ones (no parent, or parent is the root) except the
+  /// root itself, sorted by position. Children come from each category.
+  Future<List<CategoryModel>> getCategoryTabCategories() async {
+    final nodes = <Map<String, dynamic>>[];
+    String? after;
+
+    do {
+      final result = await client.query(
+        QueryOptions(
+          document: gql(CategoryQueries.getCategoryTabCategories),
+          variables: {'first': 100, 'after': ?after},
+          fetchPolicy: FetchPolicy.cacheAndNetwork,
+        ),
+      );
+
+      if (result.hasException) {
+        throw result.exception!;
+      }
+
+      final connection = result.data?['categories'] as Map<String, dynamic>?;
+      final edges = connection?['edges'] as List<dynamic>? ?? [];
+      nodes.addAll(
+        edges
+            .map((edge) => edge['node'])
+            .whereType<Map<String, dynamic>>(),
+      );
+
+      final pageInfo = connection?['pageInfo'] as Map<String, dynamic>? ?? {};
+      final hasNextPage = pageInfo['hasNextPage'] == true;
+      after = hasNextPage ? pageInfo['endCursor'] as String? : null;
+    } while (after != null);
+
+    final categories = <CategoryModel>[];
+    for (final node in nodes) {
+      final category = CategoryModel.fromTreeJson(node);
+      if (!category.isActive || category.numericId == rootCategoryId) continue;
+
+      final parentId = (node['parent'] as Map<String, dynamic>?)?['_id'];
+      if (parentId != null && parentId != rootCategoryId) continue;
+
+      categories.add(category);
+    }
+
+    categories.sort((a, b) => (a.position ?? 0).compareTo(b.position ?? 0));
+    return categories;
+  }
+
   /// Fetch flat home categories
   /// Maps to: GET_HOME_CATEGORIES from nextjs-commerce
   Future<List<CategoryModel>> getHomeCategories() async {

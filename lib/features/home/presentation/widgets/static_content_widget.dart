@@ -27,7 +27,9 @@ class StaticContentWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Parse the HTML and determine which layout to use
-    if (html.contains('top-collection-container') ||
+    if (html.contains('home-offer')) {
+      return _buildOfferBar(context);
+    } else if (html.contains('top-collection-container') ||
         html.contains('top-collection-grid')) {
       return _buildTopCollections(context);
     } else if (html.contains('inline-col-wrapper')) {
@@ -100,6 +102,51 @@ class StaticContentWidget extends StatelessWidget {
   // ──────────────────────────────────────────────────────────────────────
   // SECTION BUILDERS
   // ──────────────────────────────────────────────────────────────────────
+
+  /// Build "Offer Information" bar (`.home-offer h1`).
+  /// Storefront mobile CSS: full-width #E8EDFE bar, centered DM Serif Display
+  /// text, weight 500, 14px, 6px vertical padding.
+  Widget _buildOfferBar(BuildContext context) {
+    final match = RegExp(
+      r'<h1[^>]*>(.*?)</h1>',
+      dotAll: true,
+    ).firstMatch(html);
+    final text = _plainText(match?.group(1) ?? '');
+    if (text.isEmpty) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      key: const ValueKey('home_offer_bar'),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      color: isDark ? AppColors.neutral800 : const Color(0xFFE8EDFE),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontFamily: 'DM Serif Display',
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: isDark ? AppColors.neutral100 : AppColors.neutral900,
+        ),
+      ),
+    );
+  }
+
+  /// Strip tags, decode common entities and collapse whitespace.
+  static String _plainText(String htmlSnippet) {
+    return htmlSnippet
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
 
   /// Build "Top Collections" style layout
   /// A header with title followed by a grid of collection cards

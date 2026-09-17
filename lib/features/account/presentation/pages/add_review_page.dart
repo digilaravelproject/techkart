@@ -219,6 +219,8 @@ class _AddReviewPageState extends State<AddReviewPage> {
                 // Scrollable form content
                 Expanded(
                   child: SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,6 +467,8 @@ class _AddReviewPageState extends State<AddReviewPage> {
           controller: controller,
           maxLines: maxLines,
           validator: validator,
+          // Tapping anywhere outside the field closes the keyboard.
+          onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
           style: TextStyle(
             fontFamily: 'Roboto',
             fontWeight: FontWeight.w400,

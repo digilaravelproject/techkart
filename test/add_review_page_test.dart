@@ -41,6 +41,21 @@ void main() {
       expect(repository.createReviewCalls, 0);
     },
   );
+  testWidgets('tapping outside a text field closes the keyboard', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(_buildTestApp());
+
+    await tester.tap(find.byType(TextFormField).first);
+    await tester.pump();
+    expect(tester.testTextInput.isVisible, isTrue);
+
+    await tester.tap(find.text('Arctic Frost Winter Accessories Bundle'));
+    await tester.pump();
+
+    expect(tester.testTextInput.isVisible, isFalse);
+  });
+
   group('media attachments', () {
     late Directory dir;
 

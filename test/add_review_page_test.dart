@@ -5,6 +5,7 @@ import 'package:bagisto_flutter/features/account/data/models/account_models.dart
 import 'package:bagisto_flutter/features/account/data/repository/account_repository.dart';
 import 'package:bagisto_flutter/features/account/presentation/bloc/add_review_bloc.dart';
 import 'package:bagisto_flutter/features/account/presentation/pages/add_review_page.dart';
+import 'package:bagisto_flutter/features/account/presentation/pages/review_video_player_page.dart';
 import 'package:bagisto_flutter/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -133,6 +134,28 @@ void main() {
         findsNothing,
       );
       expect(find.byIcon(Icons.play_circle_fill), findsOneWidget);
+    });
+
+    testWidgets('tapping a video tile opens the player', (tester) async {
+      final photo = writeFile('p.png');
+      final video = writeFile('v.mp4');
+
+      await tester.pumpWidget(
+        _buildTestApp(initialAttachments: [photo, video]),
+      );
+
+      expect(
+        find.byKey(const ValueKey('add_review_media_open_0')),
+        findsNothing,
+      );
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('add_review_media_open_1')),
+      );
+      await tester.tap(find.byKey(const ValueKey('add_review_media_open_1')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(ReviewVideoPlayerPage), findsOneWidget);
     });
 
     testWidgets('hides the add tile at 5 attachments', (tester) async {

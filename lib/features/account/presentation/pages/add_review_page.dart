@@ -10,6 +10,8 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../data/repository/account_repository.dart';
 import '../../data/utils/review_attachment_encoder.dart';
 import '../bloc/add_review_bloc.dart';
+import '../widgets/review_video_thumbnail.dart';
+import 'review_video_player_page.dart';
 
 /// Add Review Page — Figma node-id=2157-6741
 ///
@@ -768,12 +770,15 @@ class _AddReviewPageState extends State<AddReviewPage> {
             ),
             clipBehavior: Clip.antiAlias,
             child: isVideo
-                ? const Center(
-                    child: Icon(
-                      Icons.play_circle_fill,
-                      size: 32,
-                      color: AppColors.white,
-                    ),
+                ? GestureDetector(
+                    key: ValueKey('add_review_media_open_$index'),
+                    onTap: isSubmitting
+                        ? null
+                        : () => ReviewVideoPlayerPage.navigateFile(
+                              context,
+                              file,
+                            ),
+                    child: ReviewVideoThumbnail(file: file, iconSize: 32),
                   )
                 : Image.file(
                     file,

@@ -9,6 +9,7 @@ import '../../../account/data/repository/account_repository.dart';
 import '../../../account/presentation/bloc/review_bloc.dart';
 import '../../../account/presentation/pages/add_review_page.dart';
 import '../../../account/presentation/pages/reviews_page.dart';
+import '../../../account/presentation/widgets/review_attachments_strip.dart';
 import '../../../category/data/models/product_model.dart';
 import '../bloc/product_detail_bloc.dart';
 
@@ -440,6 +441,11 @@ class ProductReviewsSection extends StatelessWidget {
                 color: isDark ? AppColors.neutral300 : AppColors.neutral800,
               ),
             ),
+
+          if (review.attachments.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ReviewAttachmentsStrip(attachments: review.attachments),
+          ],
 
           const SizedBox(height: 12),
 

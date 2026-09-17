@@ -5,6 +5,7 @@ import '../../../../core/widgets/app_back_button.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../data/models/account_models.dart';
 import '../bloc/review_bloc.dart';
+import '../widgets/review_attachments_strip.dart';
 
 /// Reviews Page — Figma node-id=245-5802
 ///
@@ -489,6 +490,11 @@ class _ReviewCard extends StatelessWidget {
               color: isDark ? AppColors.neutral300 : AppColors.neutral700,
             ),
           ),
+
+          if (review.attachments.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ReviewAttachmentsStrip(attachments: review.attachments),
+          ],
         ],
       ),
     );

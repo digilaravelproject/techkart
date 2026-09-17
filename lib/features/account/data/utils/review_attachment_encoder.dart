@@ -21,8 +21,10 @@ class ReviewAttachmentEncoder {
     'heic': 'image/heic',
     'heif': 'image/heif',
     'mp4': 'video/mp4',
-    'mov': 'video/quicktime',
-    'm4v': 'video/x-m4v',
+    // Stored by the server as ".quicktime"/".x-m4v" (unplayable on iOS);
+    // MP4 is the same container family and plays everywhere.
+    'mov': 'video/mp4',
+    'm4v': 'video/mp4',
     '3gp': 'video/3gpp',
     'webm': 'video/webm',
     'mkv': 'video/x-matroska',

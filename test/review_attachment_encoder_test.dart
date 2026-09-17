@@ -18,10 +18,10 @@ void main() {
     expect(ReviewAttachmentEncoder.mimeTypeFor('/a/photo.JPG'), 'image/jpeg');
     expect(ReviewAttachmentEncoder.mimeTypeFor('/a/photo.png'), 'image/png');
     expect(ReviewAttachmentEncoder.mimeTypeFor('/a/photo.heic'), 'image/heic');
-    expect(
-      ReviewAttachmentEncoder.mimeTypeFor('/a/clip.mov'),
-      'video/quicktime',
-    );
+    // The server stores video/quicktime as ".quicktime", which iOS cannot
+    // play. QuickTime-family files are uploaded as MP4 instead.
+    expect(ReviewAttachmentEncoder.mimeTypeFor('/a/clip.mov'), 'video/mp4');
+    expect(ReviewAttachmentEncoder.mimeTypeFor('/a/clip.M4V'), 'video/mp4');
     expect(ReviewAttachmentEncoder.mimeTypeFor('/a/clip.mp4'), 'video/mp4');
     expect(ReviewAttachmentEncoder.mimeTypeFor('/a/doc.pdf'), isNull);
     expect(ReviewAttachmentEncoder.mimeTypeFor('/a.dir/noext'), isNull);
@@ -38,6 +38,16 @@ void main() {
     expect(jsonDecode(encoded), [
       'data:image/png;base64,${base64Encode([1, 2, 3])}',
       'data:video/mp4;base64,${base64Encode([4, 5])}',
+    ]);
+  });
+
+  test('encode sends mov files as video/mp4 data URIs', () async {
+    final mov = writeFile('c.mov', [9]);
+
+    final encoded = await ReviewAttachmentEncoder.encode([mov]);
+
+    expect(jsonDecode(encoded), [
+      'data:video/mp4;base64,${base64Encode([9])}',
     ]);
   });
 

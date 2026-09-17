@@ -190,6 +190,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
                       textColor: textColor,
                       secondaryTextColor: secondaryTextColor,
                       isDark: isDark,
+                      isRequired: true,
                       validator: _validateName,
                     ),
                     const SizedBox(height: 16),
@@ -203,6 +204,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
                       textColor: textColor,
                       secondaryTextColor: secondaryTextColor,
                       isDark: isDark,
+                      isRequired: true,
                       validator: _validateEmail,
                     ),
                     const SizedBox(height: 16),
@@ -216,6 +218,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
                       textColor: textColor,
                       secondaryTextColor: secondaryTextColor,
                       isDark: isDark,
+                      isRequired: true,
                       validator: _validatePhone,
                     ),
                     const SizedBox(height: 16),
@@ -230,6 +233,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
                       textColor: textColor,
                       secondaryTextColor: secondaryTextColor,
                       isDark: isDark,
+                      isRequired: true,
                       validator: _validateMessage,
                     ),
                     const SizedBox(height: 24),
@@ -304,18 +308,29 @@ class _ContactUsPageState extends State<ContactUsPage> {
     required Color textColor,
     required Color secondaryTextColor,
     required bool isDark,
+    bool isRequired = false,
     String? Function(String?)? validator,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Roboto',
-            fontWeight: FontWeight.w500,
-            fontSize: 13,
-            color: textColor,
+        RichText(
+          text: TextSpan(
+            text: label,
+            style: TextStyle(
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+              color: textColor,
+            ),
+            children: isRequired
+                ? [
+                    TextSpan(
+                      text: ' *',
+                      style: TextStyle(color: Colors.red.shade400),
+                    ),
+                  ]
+                : null,
           ),
         ),
         const SizedBox(height: 8),

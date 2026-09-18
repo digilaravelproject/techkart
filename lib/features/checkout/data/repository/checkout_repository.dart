@@ -17,7 +17,6 @@ List<Map<String, dynamic>> buildCustomerAddressBookInputsFromCheckout(
       checkoutInput,
       prefix: 'billing',
       defaultAddress: defaultAddress,
-      useForShipping: usesBillingForShipping,
     ),
   ];
 
@@ -27,7 +26,6 @@ List<Map<String, dynamic>> buildCustomerAddressBookInputsFromCheckout(
         checkoutInput,
         prefix: 'shipping',
         defaultAddress: false,
-        useForShipping: true,
       ),
     );
   }
@@ -39,7 +37,6 @@ Map<String, dynamic> _buildCustomerAddressBookInput(
   Map<String, dynamic> checkoutInput, {
   required String prefix,
   required bool defaultAddress,
-  required bool useForShipping,
 }) {
   final input = <String, dynamic>{
     'firstName': _checkoutInputValue(checkoutInput, '${prefix}FirstName'),
@@ -51,7 +48,6 @@ Map<String, dynamic> _buildCustomerAddressBookInput(
     'postcode': _checkoutInputValue(checkoutInput, '${prefix}Postcode'),
     'phone': _checkoutInputValue(checkoutInput, '${prefix}PhoneNumber'),
     'defaultAddress': defaultAddress,
-    'useForShipping': useForShipping,
   };
 
   final email = _checkoutInputValue(checkoutInput, '${prefix}Email');

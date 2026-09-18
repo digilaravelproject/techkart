@@ -32,11 +32,13 @@ class CategoryBanner extends StatelessWidget {
       debugPrint('[CategoryBanner] No banner URL - showing placeholder');
     }
 
-    return Container(
-      width: double.infinity,
-      height: 200,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: AspectRatio(
+        aspectRatio: 1920 / 700,
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         // Show gradient only when no banner image
         gradient: bannerUrl == null
@@ -108,6 +110,8 @@ class CategoryBanner extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
         ),
       ),
     );

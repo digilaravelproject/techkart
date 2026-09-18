@@ -1,5 +1,22 @@
 #### This changelog consists the bug & security fixes and new features being included in the releases listed below
 
+# CHANGELOG for v2.5.0
+
+## **v2.5.0 (18th of September, 2026)** - *Release*
+
+* [Enhancement] Implemented review attachments: Users can now pick photos and videos (with preview and thumbnails) when adding a product review.
+* [Enhancement] Added a media strip to review cards on the product page to display uploaded photos and play videos.
+* [Enhancement] Displayed the short description on every product detail page.
+* [Enhancement] Added required field indicators (asterisks) to the Contact Us form.
+* [Fixed] Fixed the checkout page where saving an address to the address book caused a GraphQL error.
+* [Fixed] Fixed the product detail page to show only its own approved reviews instead of mixing reviews from other products.
+* [Fixed] Hid categories that are disabled in the admin backend from showing up in the app.
+* [Fixed] Fixed the category page layout, banner display, and empty category data handling.
+* [Fixed] Fixed the keyboard interaction on the Add Review screen so it dismisses when tapping outside fields but stays open while scrolling.
+* [Fixed] Fixed review video uploads to properly convert iOS video formats (.mov, .m4v) to .mp4.
+* [Fixed] Fixed the custom back button icon, padding, and spacing issues across pages.
+* [Fixed] Fixed the review section to properly show or hide the nickname based on the flow.
+
 # CHANGELOG for v2.4.9
 
 ## **v2.4.9 (10th of September, 2026)** - *Release*

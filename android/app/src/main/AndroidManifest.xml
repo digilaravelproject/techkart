@@ -13,6 +13,7 @@
     <application
         android:label="Mobikul Bagisto Laravel App"
         android:name="${applicationName}"
+        android:extractNativeLibs="true"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

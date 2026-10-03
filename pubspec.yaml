@@ -75,8 +75,8 @@ dependencies:
   permission_handler: ^11.0.0
 
   # On-device ML Kit for real object detection
-  google_mlkit_image_labeling: ^0.14.0
-  google_mlkit_object_detection: ^0.15.0
+  google_mlkit_image_labeling: ^0.16.1
+  google_mlkit_object_detection: ^0.17.1
 
   # Image Processing
   http: ^1.1.0
@@ -152,3 +152,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+dependency_overrides:
+  html: 0.15.6

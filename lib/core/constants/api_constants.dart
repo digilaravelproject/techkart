@@ -1,10 +1,9 @@
-/// Bagisto API endpoint
-const String bagistoEndpoint =
-    'https://your-bagisto-domain.com/graphql';
+/// Bagisto GraphQL endpoint
+const String bagistoEndpoint = 'https://indigo-rhinoceros-151425.hostingersite.com/api/graphql';
 
 /// Storefront key for Bagisto API
 const String storefrontKey =
-    'your_storefront_key_here';
+    'pk_storefront_WweL5embxeDdB3osjABIgHyBq6fPhST1';
 
 /// Default channel code used by request headers.
 const String channelCode = 'default';
@@ -12,5 +11,5 @@ const String channelCode = 'default';
 /// Default Bagisto channel ID used during app bootstrap.
 const int channelId = 1;
 
-/// Company name
-const String companyName = 'Your Company Name';
+/// Company name (optional metadata)
+const String companyName = 'Digi Store';

@@ -2,6 +2,14 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:equatable/equatable.dart';
 
+int? _parseInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
 /// Represents a theme customization entry from the Bagisto API.
 /// Each node defines a section of the homepage (image_carousel, product_carousel,
 /// category_carousel, etc.) along with its translated options JSON.
@@ -38,10 +46,17 @@ class ThemeCustomization extends Equatable {
       final rawOptions = node['options'];
       if (rawOptions is String) {
         try {
-          parsed = jsonDecode(rawOptions) as Map<String, dynamic>;
+          final decoded = jsonDecode(rawOptions);
+          if (decoded is Map) {
+            parsed = Map<String, dynamic>.from(decoded);
+          } else if (decoded is List) {
+            parsed = {'items': decoded};
+          }
         } catch (_) {}
       } else if (rawOptions is Map) {
         parsed = Map<String, dynamic>.from(rawOptions);
+      } else if (rawOptions is List) {
+        parsed = {'items': rawOptions};
       }
       if (parsed == null || parsed.isEmpty) continue;
 
@@ -58,6 +73,25 @@ class ThemeCustomization extends Equatable {
     if (options.isEmpty && enOptions != null) {
       options = enOptions;
     }
+    // Also support direct singular 'translation' node if present
+    if (options.isEmpty && json['translation'] is Map) {
+      final trans = json['translation'] as Map;
+      final rawOptions = trans['options'];
+      if (rawOptions is String) {
+        try {
+          final decoded = jsonDecode(rawOptions);
+          if (decoded is Map) {
+            options = Map<String, dynamic>.from(decoded);
+          } else if (decoded is List) {
+            options = {'items': decoded};
+          }
+        } catch (_) {}
+      } else if (rawOptions is Map) {
+        options = Map<String, dynamic>.from(rawOptions);
+      } else if (rawOptions is List) {
+        options = {'items': rawOptions};
+      }
+    }
 
     return ThemeCustomization(
       id: json['id']?.toString() ?? '',
@@ -67,7 +101,7 @@ class ThemeCustomization extends Equatable {
           json['status'] == 'true' ||
           json['status'] == 1 ||
           json['status'] == '1',
-      sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
+      sortOrder: _parseInt(json['sortOrder']) ?? 0,
       options: options,
     );
   }
@@ -96,13 +130,18 @@ class HomeCategory extends Equatable {
 
   factory HomeCategory.fromJson(Map<String, dynamic> json) {
     final translation = json['translation'] as Map<String, dynamic>? ?? {};
+    int? numId = _parseInt(json['_id']);
+    if (numId == null && json['id'] != null) {
+      final parts = json['id'].toString().split('/');
+      if (parts.isNotEmpty) numId = int.tryParse(parts.last);
+    }
     return HomeCategory(
       id: json['id']?.toString() ?? '',
-      numericId: json['_id'] as int?,
+      numericId: numId,
       name: translation['name'] as String? ?? '',
       slug: translation['slug'] as String? ?? '',
       logoUrl: json['logoUrl'] as String?,
-      position: (json['position'] as num?)?.toInt() ?? 0,
+      position: _parseInt(json['position']) ?? 0,
     );
   }
 
@@ -186,7 +225,7 @@ class HomeProduct extends Equatable {
     final avgRating = ratings.isNotEmpty
         ? ratings.reduce((a, b) => a + b) / ratings.length
         : fallbackRating;
-    final fallbackReviewCount = (json['reviewCount'] as num?)?.toInt() ?? 0;
+    final fallbackReviewCount = _toInt(json['reviewCount']);
 
     return HomeProduct(
       id: json['id']?.toString() ?? '',
@@ -202,7 +241,7 @@ class HomeProduct extends Equatable {
       formattedPrice: json['formattedPrice'] as String?,
       formattedMinimumPrice: json['formattedMinimumPrice'] as String?,
       formattedSpecialPrice: json['formattedSpecialPrice'] as String?,
-      isSaleable: json['isSaleable'] == true,
+      isSaleable: json['isSaleable'] == true || json['isSaleable'] == '1' || json['isSaleable'] == 1 || json['isSaleable'] == 'true',
       averageRating: avgRating,
       reviewCount: ratings.isNotEmpty ? ratings.length : fallbackReviewCount,
     );
@@ -325,4 +364,11 @@ double _toDouble(dynamic value) {
   if (value is num) return value.toDouble();
   if (value is String) return double.tryParse(value) ?? 0;
   return 0;
+}
+
+int _toInt(dynamic value, [int fallback = 0]) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? fallback;
+  return fallback;
 }

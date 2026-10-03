@@ -17,7 +17,10 @@ class HomeRepository {
   HomeRepository({required GraphQLClient client}) : _client = client;
 
   /// Fetches the theme customization entries that define homepage sections.
-  Future<List<ThemeCustomization>> fetchThemeCustomizations() async {
+  Future<List<ThemeCustomization>> fetchThemeCustomizations() =>
+      fetchsections();
+
+  Future<List<ThemeCustomization>> fetchsections() async {
     // Read the user's preferred locale for selecting the right translation
     final prefs = await SharedPreferences.getInstance();
     final locale = prefs.getString(LocaleCubit.localeKey) ?? 'en';
@@ -36,7 +39,9 @@ class HomeRepository {
       );
     }
 
-    final edges = result.data?['themeCustomizations']?['edges'] as List? ?? [];
+    final rawSections =
+        result.data?['sections'] ?? result.data?['themeCustomizations'];
+    final edges = rawSections?['edges'] as List? ?? [];
     return edges
         .map(
           (e) => ThemeCustomization.fromJson(

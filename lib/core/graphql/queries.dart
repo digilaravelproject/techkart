@@ -1300,13 +1300,14 @@ $slotFields
 
 class ThemeQueries {
   /// GET_THEME_CUSTOMIZATION
-  /// Source: nextjs-commerce/src/graphql/theme/queries/ThemeCustomization.ts
+  /// Updated for Bagisto 2.4 - uses sections instead of themeCustomizations
   static const String getThemeCustomization = r'''
-    query themeCustomization($first: Int) {
-      themeCustomizations(first: $first) {
+    query themeSections($first: Int) {
+      sections(first: $first) {
         edges {
           node {
             id
+            _id
             type
             name
             status
@@ -1315,7 +1316,8 @@ class ThemeQueries {
               edges {
                 node {
                   id
-                  themeCustomizationId
+                  _id
+                  sectionId
                   locale
                   options
                 }

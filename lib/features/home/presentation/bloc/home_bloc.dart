@@ -105,7 +105,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         return await _doLoad(emit);
-      } catch (e) {
+      } catch (e, stackTrace) {
+        debugPrint(
+          '[HomeBloc] error loading home (attempt $attempt/$maxAttempts): $e\n$stackTrace',
+        );
         if (ErrorMapper.isNetworkError(e) && attempt < maxAttempts) {
           debugPrint(
             '[HomeBloc] network error (attempt $attempt/$maxAttempts, retrying): $e',
@@ -145,12 +148,22 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   Future<void> _doLoad(Emitter<HomeState> emit) async {
     // 1) Fetch theme customizations + categories in parallel
     final results = await Future.wait([
-      _repository.fetchThemeCustomizations(),
-      _repository.fetchHomeCategories(),
+      _repository.fetchThemeCustomizations().catchError((e, st) {
+        debugPrint('[HomeBloc] fetchThemeCustomizations error: $e\n$st');
+        return <ThemeCustomization>[];
+      }),
+      _repository.fetchHomeCategories().catchError((e, st) {
+        debugPrint('[HomeBloc] fetchHomeCategories error: $e\n$st');
+        return <HomeCategory>[];
+      }),
     ]);
 
     final customizations = results[0] as List<ThemeCustomization>;
     final categories = results[1] as List<HomeCategory>;
+
+    if (customizations.isEmpty && categories.isEmpty) {
+      throw Exception('Failed to load home page content: no data received.');
+    }
 
     // 2) Fetch all product_carousel sections in parallel
     final productCarousels = customizations

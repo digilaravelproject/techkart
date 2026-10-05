@@ -21,6 +21,9 @@ import '../helpers/checkout_address_sheet_helpers.dart';
 import '../widgets/checkout_address_selection_sheet.dart';
 import '../widgets/checkout_interaction_blocker.dart';
 import 'thankyou_page.dart';
+import 'payment_gateway_page.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+import '../../../../core/constants/api_constants.dart';
 
 class CheckoutPage extends StatelessWidget {
   const CheckoutPage({super.key});
@@ -155,8 +158,94 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
     return cartState.isGuest;
   }
 
+  late Razorpay _razorpay;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handleRazorpaySuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handleRazorpayError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleRazorpayExternalWallet);
+  }
+
+  void _openRazorpay(CheckoutState state) {
+    final cart = state.cart;
+    final grandTotal = cart.grandTotal;
+    final amountInPaise = (grandTotal * 100).round();
+    final address = state.selectedAddress;
+
+    // Check if key is available dynamically from backend payment methods
+    String keyToUse = razorpayKeyId;
+    final rzpMethods = state.paymentMethods
+        .where((m) => m.method.toLowerCase().contains('razorpay'));
+    if (rzpMethods.isNotEmpty &&
+        rzpMethods.first.razorpayKey != null &&
+        rzpMethods.first.razorpayKey!.isNotEmpty) {
+      keyToUse = rzpMethods.first.razorpayKey!;
+      debugPrint('[Razorpay] Using dynamic key from backend: $keyToUse');
+    } else {
+      debugPrint('[Razorpay] Using key from constants: $keyToUse');
+    }
+
+    final options = {
+      'key': keyToUse,
+      'amount': amountInPaise > 0 ? amountInPaise : 100,
+      'name': companyName,
+      'description': 'Order Payment',
+      'currency': 'INR',
+      'prefill': {
+        'contact': address?.phone ?? '',
+        'email': address?.email ?? '',
+        'name': address?.fullName ?? '',
+      },
+      'theme': {
+        'color': '#0066FF',
+      },
+      'external': {
+        'wallets': ['paytm'],
+      },
+    };
+
+    debugPrint('[Razorpay] Opening checkout with amount: $amountInPaise paise, key: $keyToUse');
+    try {
+      _razorpay.open(options);
+    } catch (e) {
+      debugPrint('[Razorpay] Exception opening checkout: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to open Razorpay: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _handleRazorpaySuccess(PaymentSuccessResponse response) {
+    debugPrint('[Razorpay] Payment Success! paymentId=${response.paymentId}, orderId=${response.orderId}');
+    context.read<CheckoutBloc>().add(
+      OnPaymentGatewaySuccess(orderId: response.paymentId),
+    );
+  }
+
+  void _handleRazorpayError(PaymentFailureResponse response) {
+    debugPrint('[Razorpay] Payment Error: code=${response.code}, message=${response.message}');
+    context.read<CheckoutBloc>().add(OnPaymentGatewayCancelled());
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(response.message ?? 'Payment was cancelled or failed.'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+  }
+
+  void _handleRazorpayExternalWallet(ExternalWalletResponse response) {
+    debugPrint('[Razorpay] External Wallet Selected: ${response.walletName}');
+  }
+
   @override
   void dispose() {
+    _razorpay.clear();
     _couponController.dispose();
     _billingFirstNameCtrl.dispose();
     _billingLastNameCtrl.dispose();
@@ -215,6 +304,51 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
             _couponController.clear();
             context.read<CheckoutBloc>().add(ClearCheckoutMessage());
           }
+
+          // Handle native Razorpay trigger
+          if (state.triggerRazorpay) {
+            context.read<CheckoutBloc>().add(ClearRazorpayTrigger());
+            _openRazorpay(state);
+          }
+
+          // Handle external payment gateway (PayPal, Stripe, etc.)
+          if (state.paymentGatewayUrl != null &&
+              state.paymentGatewayUrl!.isNotEmpty) {
+            final gatewayUrl = state.paymentGatewayUrl!;
+            context.read<CheckoutBloc>().add(ClearPaymentGatewayUrl());
+
+            final authState = context.read<AuthBloc>().state;
+            final authToken =
+                authState is AuthAuthenticated ? authState.token : null;
+            final methodMatches = state.paymentMethods
+                .where((m) => m.method == state.selectedPaymentMethod);
+            final methodTitle = methodMatches.isNotEmpty
+                ? methodMatches.first.title
+                : 'Payment';
+
+            final checkoutBloc = context.read<CheckoutBloc>();
+            Navigator.of(context)
+                .push<PaymentResult>(
+              MaterialPageRoute(
+                builder: (_) => PaymentGatewayPage(
+                  paymentUrl: gatewayUrl,
+                  authToken: authToken,
+                  paymentTitle: methodTitle.isNotEmpty ? methodTitle : 'Payment',
+                ),
+              ),
+            )
+                .then((result) {
+              if (!mounted) return;
+              if (result != null && result.isSuccess) {
+                checkoutBloc.add(
+                  OnPaymentGatewaySuccess(orderId: result.orderId),
+                );
+              } else {
+                checkoutBloc.add(OnPaymentGatewayCancelled());
+              }
+            });
+          }
+
           if (state.successMessage != null &&
               state.status == CheckoutStatus.orderPlaced) {
             // Reload cart after successful order

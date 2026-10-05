@@ -1,5 +1,5 @@
-/// GraphQL queries and mutations for Bagisto checkout flow
-/// Based on the actual Bagisto Headless Commerce GraphQL schema
+// GraphQL queries and mutations for Bagisto checkout flow
+// Based on the actual Bagisto Headless Commerce GraphQL schema
 
 class CheckoutQueries {
   /// Get saved checkout addresses (billing & shipping)
@@ -8,7 +8,7 @@ class CheckoutQueries {
       collectionGetCheckoutAddresses {
         edges {
           node {
-            id
+            _id
             addressType
             firstName
             lastName
@@ -57,6 +57,7 @@ class CheckoutQueries {
         title
         description
         icon
+        additionalData
         isAllowed
       }
     }
@@ -126,7 +127,6 @@ class CheckoutMutations {
         checkoutAddress {
           success
           message
-          id
           cartToken
         }
       }
@@ -139,7 +139,6 @@ class CheckoutMutations {
       createCheckoutShippingMethod(input: $input) {
         checkoutShippingMethod {
           success
-          id
           message
         }
       }

@@ -4,7 +4,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../category/data/models/product_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../account/presentation/pages/add_review_page.dart';
 import '../bloc/product_detail_bloc.dart';
 

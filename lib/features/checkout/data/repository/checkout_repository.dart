@@ -329,36 +329,53 @@ class CheckoutRepository {
   /// Fetch saved checkout addresses (cursor connection format)
   Future<List<CheckoutAddress>> getCheckoutAddresses() async {
     debugPrint('[CheckoutRepo] getCheckoutAddresses...');
-    final result = await _authedClient.query(
-      QueryOptions(
-        document: gql(CheckoutQueries.getCheckoutAddresses),
-        fetchPolicy: FetchPolicy.networkOnly,
-      ),
-    );
-
-    if (result.hasException) {
-      debugPrint(
-        '[CheckoutRepo] getCheckoutAddresses error: ${result.exception}',
+    try {
+      final result = await _authedClient.query(
+        QueryOptions(
+          document: gql(CheckoutQueries.getCheckoutAddresses),
+          fetchPolicy: FetchPolicy.networkOnly,
+        ),
       );
-      throw result.exception!;
+
+      if (result.hasException) {
+        debugPrint(
+          '[CheckoutRepo] getCheckoutAddresses server error: ${result.exception}, falling back to getCustomerAddresses...',
+        );
+        return await getCustomerAddresses();
+      }
+
+      _logCheckoutApiDetails(
+        'getCheckoutAddresses',
+        responseData: result.data,
+      );
+
+      final edges =
+          result.data?['collectionGetCheckoutAddresses']?['edges'] as List?;
+      if (edges == null || edges.isEmpty) {
+        debugPrint(
+          '[CheckoutRepo] collectionGetCheckoutAddresses returned empty, trying getCustomerAddresses...',
+        );
+        return await getCustomerAddresses();
+      }
+
+      return edges
+          .map(
+            (e) => CheckoutAddress.fromJson(
+              (e['node'] ?? e) as Map<String, dynamic>,
+            ),
+          )
+          .toList();
+    } catch (e) {
+      debugPrint(
+        '[CheckoutRepo] getCheckoutAddresses exception: $e, falling back to getCustomerAddresses...',
+      );
+      try {
+        return await getCustomerAddresses();
+      } catch (e2) {
+        debugPrint('[CheckoutRepo] getCustomerAddresses fallback failed: $e2');
+        return [];
+      }
     }
-
-    _logCheckoutApiDetails(
-      'getCheckoutAddresses',
-      responseData: result.data,
-    );
-
-    final edges =
-        result.data?['collectionGetCheckoutAddresses']?['edges'] as List?;
-    if (edges == null) return [];
-
-    return edges
-        .map(
-          (e) => CheckoutAddress.fromJson(
-            (e['node'] ?? e) as Map<String, dynamic>,
-          ),
-        )
-        .toList();
   }
 
   /// Fetch customer saved addresses from account API.

@@ -1,8 +1,8 @@
-/// Auth data models for Bagisto customer API
-///
-/// IMPORTANT: The Bagisto API returns some fields as strings that might
-/// look like booleans (e.g. status="1", isVerified="1"). We store them
-/// as Strings to avoid type-cast crashes.
+// Auth data models for Bagisto customer API
+//
+// IMPORTANT: The Bagisto API returns some fields as strings that might
+// look like booleans (e.g. status="1", isVerified="1"). We store them
+// as Strings to avoid type-cast crashes.
 
 class CustomerLogin {
   final String? id;

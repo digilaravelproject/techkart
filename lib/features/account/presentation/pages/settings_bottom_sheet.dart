@@ -69,7 +69,7 @@ class SettingsBottomSheet extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -95,6 +95,14 @@ class SettingsBottomSheet extends StatelessWidget {
               // ── Change Theme button ──
               // Figma node: 248:8280
               _buildChangeThemeButton(context, isDark),
+
+              const SizedBox(height: 12),
+
+              _buildLanguageSelector(context, isDark),
+
+              const SizedBox(height: 12),
+
+              _buildCurrencySelector(context, isDark),
 
               const SizedBox(height: 24),
 

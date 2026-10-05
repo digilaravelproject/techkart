@@ -149,8 +149,6 @@ class _AccountMenuBody extends StatelessWidget {
     required String email,
     required String initials,
   }) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 0),
       child: Row(

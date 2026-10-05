@@ -72,7 +72,7 @@ class CategoryQueries {
         bannerUrl
         status
         translation {
-          id
+          _id
           name
           slug
           description
@@ -90,7 +90,7 @@ class CategoryQueries {
               bannerUrl
               status
               translation {
-                id
+                _id
                 name
                 slug
                 urlPath
@@ -125,7 +125,7 @@ class CategoryQueries {
               _id
             }
             translation {
-              id
+              _id
               name
               slug
               urlPath
@@ -140,7 +140,7 @@ class CategoryQueries {
                   logoUrl
                   bannerUrl
                   translation {
-                    id
+                    _id
                     name
                     slug
                     urlPath
@@ -169,7 +169,6 @@ class CategoryQueries {
             translation {
               name
               slug
-              id
               _id
             }
           }
@@ -1315,7 +1314,6 @@ class ThemeQueries {
             translations {
               edges {
                 node {
-                  id
                   _id
                   sectionId
                   locale

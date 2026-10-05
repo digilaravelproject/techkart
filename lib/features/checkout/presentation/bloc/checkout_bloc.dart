@@ -98,6 +98,23 @@ class ToggleSameAddress extends CheckoutEvent {}
 /// Place the order (saves payment first, then creates order)
 class PlaceOrder extends CheckoutEvent {}
 
+/// Clear payment gateway redirect URL after navigating to it
+class ClearPaymentGatewayUrl extends CheckoutEvent {}
+
+/// Clear Razorpay trigger after opening Razorpay SDK
+class ClearRazorpayTrigger extends CheckoutEvent {}
+
+/// Payment completed on gateway (Razorpay, etc.)
+class OnPaymentGatewaySuccess extends CheckoutEvent {
+  final String? orderId;
+  const OnPaymentGatewaySuccess({this.orderId});
+  @override
+  List<Object?> get props => [orderId];
+}
+
+/// Payment cancelled by user on gateway
+class OnPaymentGatewayCancelled extends CheckoutEvent {}
+
 /// Clear messages
 class ClearCheckoutMessage extends CheckoutEvent {}
 
@@ -181,6 +198,8 @@ class CheckoutState extends Equatable {
   final bool isLoading;
   final bool isPlacingOrder;
   final CheckoutOrderResponse? orderResponse;
+  final String? paymentGatewayUrl;
+  final bool triggerRazorpay;
 
   // Countries & states from Bagisto API
   final List<BagistoCountry> countries;
@@ -210,6 +229,8 @@ class CheckoutState extends Equatable {
     this.isLoading = false,
     this.isPlacingOrder = false,
     this.orderResponse,
+    this.paymentGatewayUrl,
+    this.triggerRazorpay = false,
     this.countries = const [],
     this.billingStates = const [],
     this.shippingStates = const [],
@@ -245,6 +266,8 @@ class CheckoutState extends Equatable {
     bool? isLoading,
     bool? isPlacingOrder,
     CheckoutOrderResponse? orderResponse,
+    String? paymentGatewayUrl,
+    bool? triggerRazorpay,
     List<BagistoCountry>? countries,
     List<BagistoCountryState>? billingStates,
     List<BagistoCountryState>? shippingStates,
@@ -256,6 +279,8 @@ class CheckoutState extends Equatable {
     bool clearSelectedShippingAddress = false,
     bool clearSelectedShippingMethod = false,
     bool clearSelectedPaymentMethod = false,
+    bool clearPaymentGatewayUrl = false,
+    bool clearTriggerRazorpay = false,
   }) {
     return CheckoutState(
       status: status ?? this.status,
@@ -288,6 +313,12 @@ class CheckoutState extends Equatable {
       isLoading: isLoading ?? this.isLoading,
       isPlacingOrder: isPlacingOrder ?? this.isPlacingOrder,
       orderResponse: orderResponse ?? this.orderResponse,
+      paymentGatewayUrl: clearPaymentGatewayUrl
+          ? null
+          : (paymentGatewayUrl ?? this.paymentGatewayUrl),
+      triggerRazorpay: clearTriggerRazorpay
+          ? false
+          : (triggerRazorpay ?? this.triggerRazorpay),
       countries: countries ?? this.countries,
       billingStates: billingStates ?? this.billingStates,
       shippingStates: shippingStates ?? this.shippingStates,
@@ -319,6 +350,8 @@ class CheckoutState extends Equatable {
     isLoading,
     isPlacingOrder,
     orderResponse,
+    paymentGatewayUrl,
+    triggerRazorpay,
     countries,
     billingStates,
     shippingStates,
@@ -354,6 +387,10 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     on<RemoveCheckoutCoupon>(_onRemoveCoupon);
     on<ToggleSameAddress>(_onToggleSameAddress);
     on<PlaceOrder>(_onPlaceOrder);
+    on<ClearPaymentGatewayUrl>(_onClearPaymentGatewayUrl);
+    on<ClearRazorpayTrigger>(_onClearRazorpayTrigger);
+    on<OnPaymentGatewaySuccess>(_onPaymentGatewaySuccess);
+    on<OnPaymentGatewayCancelled>(_onPaymentGatewayCancelled);
     on<ClearCheckoutMessage>(_onClearMessage);
     on<ResetAddressConfirmation>(_onResetAddressConfirmation);
     on<FetchCountries>(_onFetchCountries);
@@ -491,7 +528,6 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
               isLoading: false,
             ),
           );
-          add(FetchCountries());
 
           // Now fetch shipping rates (skip if virtual only and fetch payment methods directly)
           if (state.isVirtualOnly) {
@@ -514,42 +550,43 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
             }
           } else {
             try {
-              final rates = await repository.getShippingRates();
-              debugPrint(
-                '[CheckoutBloc] Auto-fetched ${rates.length} shipping rates',
-              );
+              // Concurrently fetch shipping rates and payment methods in parallel
+              final results = await Future.wait([
+                repository.getShippingRates(),
+                repository.getPaymentMethods().catchError((e) {
+                  debugPrint('[CheckoutBloc] Parallel getPaymentMethods error (likely needs shipping first): $e');
+                  return <PaymentMethod>[];
+                }),
+              ]);
+
+              final rates = results[0] as List<ShippingRate>;
+              var methods = results[1] as List<PaymentMethod>;
+              String? selectedShipCode;
 
               if (rates.isNotEmpty) {
-                final firstRate = rates.first;
-                final shipResp = await repository.saveShippingMethod(
-                  firstRate.method,
-                );
-                debugPrint(
-                  '[CheckoutBloc] Auto-saved shipping: ${firstRate.code}, success=${shipResp.success}',
-                );
-
-                if (shipResp.success) {
-                  _requestCartRefresh();
-                  final methods = await repository.getPaymentMethods();
-                  debugPrint(
-                    '[CheckoutBloc] Auto-fetched ${methods.length} payment methods',
-                  );
-                  emit(
-                    state.copyWith(
-                      shippingRates: rates,
-                      selectedShippingMethod: firstRate.code,
-                      status: CheckoutStatus.paymentMethodsFetched,
-                      paymentMethods: methods,
-                    ),
-                  );
+                // If payment methods came back empty, cart needs shipping method saved first
+                if (methods.isEmpty) {
+                  final firstRate = rates.first;
+                  selectedShipCode = firstRate.code;
+                  final shipResp = await repository.saveShippingMethod(firstRate.method);
+                  if (shipResp.success) {
+                    methods = await repository.getPaymentMethods().catchError((_) => <PaymentMethod>[]);
+                  }
                 } else {
-                  emit(
-                    state.copyWith(
-                      shippingRates: rates,
-                      status: CheckoutStatus.shippingRatesFetched,
-                    ),
-                  );
+                  // Shipping method already exists on cart
+                  selectedShipCode = rates.first.code;
                 }
+
+                emit(
+                  state.copyWith(
+                    shippingRates: rates,
+                    selectedShippingMethod: selectedShipCode,
+                    status: methods.isNotEmpty
+                        ? CheckoutStatus.paymentMethodsFetched
+                        : CheckoutStatus.shippingRatesFetched,
+                    paymentMethods: methods,
+                  ),
+                );
               } else {
                 emit(
                   state.copyWith(
@@ -599,7 +636,6 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
                 isLoading: false,
               ),
             );
-            add(FetchCountries());
 
             // Fetch shipping rates (or payment methods if virtual only)
             if (state.isVirtualOnly) {
@@ -641,7 +677,6 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
                   );
 
                   if (shipResp.success) {
-                    _requestCartRefresh();
                     final methods = await repository.getPaymentMethods();
                     debugPrint(
                       '[CheckoutBloc] Auto-fetched ${methods.length} payment methods',
@@ -853,6 +888,27 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       add(FetchCountries());
     } catch (e) {
       debugPrint('[CheckoutBloc] getCheckoutAddresses error: $e');
+      try {
+        final fallbackAddresses = await repository.getCustomerAddresses();
+        if (fallbackAddresses.isNotEmpty) {
+          final defaultAddr = fallbackAddresses.firstWhere(
+            (a) => a.defaultAddress,
+            orElse: () => fallbackAddresses.first,
+          );
+          emit(
+            state.copyWith(
+              addresses: fallbackAddresses,
+              selectedAddress: defaultAddr,
+              status: CheckoutStatus.addressesFetched,
+              isLoading: false,
+            ),
+          );
+          add(FetchCountries());
+          return;
+        }
+      } catch (e2) {
+        debugPrint('[CheckoutBloc] Fallback getCustomerAddresses failed: $e2');
+      }
       emit(
         state.copyWith(
           status: CheckoutStatus.addressesFetched,
@@ -1399,7 +1455,9 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         final payResp = await repository.savePaymentMethod(
           state.selectedPaymentMethod!,
         );
-        debugPrint('[CheckoutBloc] savePayment success=${payResp.success}');
+        debugPrint(
+          '[CheckoutBloc] savePayment success=${payResp.success}, gatewayUrl=${payResp.paymentGatewayUrl}',
+        );
         if (!payResp.success) {
           emit(
             state.copyWith(
@@ -1409,17 +1467,56 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
           );
           return;
         }
+
+        // Native Razorpay handling
+        if (state.selectedPaymentMethod == 'razorpay') {
+          debugPrint('[CheckoutBloc] Triggering native Razorpay SDK');
+          emit(
+            state.copyWith(
+              isPlacingOrder: false,
+              triggerRazorpay: true,
+            ),
+          );
+          return;
+        }
+
+        // Check if gateway URL is returned (e.g. PayPal, Stripe)
+        if (payResp.paymentGatewayUrl != null &&
+            payResp.paymentGatewayUrl!.isNotEmpty) {
+          debugPrint(
+            '[CheckoutBloc] Gateway redirect required: ${payResp.paymentGatewayUrl}',
+          );
+          emit(
+            state.copyWith(
+              isPlacingOrder: false,
+              paymentGatewayUrl: payResp.paymentGatewayUrl,
+            ),
+          );
+          return;
+        }
       }
-      // Place the order
+
+      // Offline / Direct payment methods (e.g. Cash On Delivery, Money Transfer)
       final response = await repository.placeOrder();
       debugPrint('[CheckoutBloc] placeOrder orderId=${response.orderId}');
-      if (response.success) {
+
+      // If placeOrder succeeded and generated an actual order
+      if (response.success && response.orderId != null && response.orderId!.isNotEmpty) {
         emit(
           state.copyWith(
             status: CheckoutStatus.orderPlaced,
             isPlacingOrder: false,
             orderResponse: response,
             successMessage: response.message ?? 'Order placed successfully!',
+          ),
+        );
+      } else if (response.orderId == null) {
+        // If orderId is null, it's pending payment or gateway verification
+        emit(
+          state.copyWith(
+            isPlacingOrder: false,
+            errorMessage: response.message ??
+                'Payment required to complete order. Please check payment method.',
           ),
         );
       } else {
@@ -1442,6 +1539,79 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         ),
       );
     }
+  }
+
+  void _onClearPaymentGatewayUrl(
+    ClearPaymentGatewayUrl event,
+    Emitter<CheckoutState> emit,
+  ) {
+    emit(state.copyWith(clearPaymentGatewayUrl: true));
+  }
+
+  void _onClearRazorpayTrigger(
+    ClearRazorpayTrigger event,
+    Emitter<CheckoutState> emit,
+  ) {
+    emit(state.copyWith(clearTriggerRazorpay: true));
+  }
+
+  Future<void> _onPaymentGatewaySuccess(
+    OnPaymentGatewaySuccess event,
+    Emitter<CheckoutState> emit,
+  ) async {
+    emit(state.copyWith(isPlacingOrder: true));
+    try {
+      final orderResp = await repository.placeOrder();
+      _requestCartRefresh();
+      emit(
+        state.copyWith(
+          status: CheckoutStatus.orderPlaced,
+          isPlacingOrder: false,
+          clearPaymentGatewayUrl: true,
+          clearTriggerRazorpay: true,
+          orderResponse: orderResp.success && orderResp.orderId != null
+              ? orderResp
+              : CheckoutOrderResponse(
+                  success: true,
+                  orderId: event.orderId,
+                  orderIncrementId: event.orderId,
+                  message: 'Order placed successfully!',
+                ),
+          successMessage: 'Order placed successfully!',
+        ),
+      );
+    } catch (e) {
+      debugPrint('[CheckoutBloc] placeOrder after payment gateway success error: $e');
+      _requestCartRefresh();
+      emit(
+        state.copyWith(
+          status: CheckoutStatus.orderPlaced,
+          isPlacingOrder: false,
+          clearPaymentGatewayUrl: true,
+          clearTriggerRazorpay: true,
+          orderResponse: CheckoutOrderResponse(
+            success: true,
+            orderId: event.orderId,
+            orderIncrementId: event.orderId,
+            message: 'Order placed successfully!',
+          ),
+          successMessage: 'Order placed successfully!',
+        ),
+      );
+    }
+  }
+
+  void _onPaymentGatewayCancelled(
+    OnPaymentGatewayCancelled event,
+    Emitter<CheckoutState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        clearPaymentGatewayUrl: true,
+        isPlacingOrder: false,
+        errorMessage: 'Payment was cancelled. You can choose another method or try again.',
+      ),
+    );
   }
 
   Future<void> _onApplyCoupon(

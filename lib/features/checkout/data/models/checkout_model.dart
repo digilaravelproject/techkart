@@ -122,7 +122,7 @@ class CheckoutAddress {
 
   factory CheckoutAddress.fromJson(Map<String, dynamic> json) {
     return CheckoutAddress(
-      id: json['id']?.toString() ?? '',
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       addressType: json['addressType'] as String? ?? '',
       firstName: json['firstName'] as String? ?? '',
       lastName: json['lastName'] as String? ?? '',
@@ -236,6 +236,7 @@ class PaymentMethod {
   final String title;
   final String? description;
   final String? icon;
+  final dynamic additionalData;
   final bool isAllowed;
 
   const PaymentMethod({
@@ -244,6 +245,7 @@ class PaymentMethod {
     this.title = '',
     this.description,
     this.icon,
+    this.additionalData,
     this.isAllowed = true,
   });
 
@@ -254,8 +256,29 @@ class PaymentMethod {
       title: json['title'] as String? ?? '',
       description: json['description'] as String?,
       icon: json['icon'] as String?,
+      additionalData: json['additionalData'],
       isAllowed: json['isAllowed'] as bool? ?? true,
     );
+  }
+
+  /// Extracts Razorpay Key ID if backend provides it dynamically in additionalData
+  String? get razorpayKey {
+    if (additionalData == null) return null;
+    if (additionalData is Map) {
+      final map = additionalData as Map;
+      for (final k in ['key_id', 'key', 'razorpay_key', 'api_key', 'client_id', 'keyId']) {
+        if (map[k] != null && map[k].toString().trim().isNotEmpty) {
+          return map[k].toString().trim();
+        }
+      }
+    } else if (additionalData is String) {
+      final str = additionalData as String;
+      final match = RegExp(r'rzp_(test|live)_[A-Za-z0-9]+').firstMatch(str);
+      if (match != null) {
+        return match.group(0);
+      }
+    }
+    return null;
   }
 }
 
@@ -327,6 +350,13 @@ class CheckoutPaymentMethodResponse {
       paymentGatewayUrl: json['paymentGatewayUrl'] as String?,
       paymentData: json['paymentData'] as String?,
     );
+  }
+
+  /// Extracts Razorpay Key ID if returned in paymentData
+  String? get razorpayKey {
+    if (paymentData == null || paymentData!.isEmpty) return null;
+    final match = RegExp(r'rzp_(test|live)_[A-Za-z0-9]+').firstMatch(paymentData!);
+    return match?.group(0);
   }
 }
 

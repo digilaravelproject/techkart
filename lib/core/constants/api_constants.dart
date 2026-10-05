@@ -13,3 +13,7 @@ const int channelId = 1;
 
 /// Company name (optional metadata)
 const String companyName = 'Digi Store';
+
+/// Razorpay Key ID (Client ID from Razorpay Dashboard / Bagisto Admin)
+/// Can also be dynamically overridden by backend `collectionPaymentMethods` additionalData
+const String razorpayKeyId = 'rzp_test_Tb5870uMDXcfgC';

@@ -264,9 +264,17 @@ class FCMService {
     return null;
   }
 
+  static const int _maxTokenRetries = 3;
+  int _tokenRetryCount = 0;
+
   /// Schedule a retry to get the token after a delay
   void _scheduleTokenRetry() {
-    debugPrint('🔄 Scheduling token retry in 5 seconds...');
+    if (_tokenRetryCount >= _maxTokenRetries) {
+      debugPrint('⚠️ Max FCM token retries ($_maxTokenRetries) reached. Stopping retries (Firebase service may be unconfigured or unavailable).');
+      return;
+    }
+    _tokenRetryCount++;
+    debugPrint('🔄 Scheduling token retry ($_tokenRetryCount/$_maxTokenRetries) in 5 seconds...');
     Future.delayed(const Duration(seconds: 5), () async {
       try {
         final token = await _getAndSaveDeviceToken();

@@ -509,11 +509,34 @@ class CheckoutRepository {
     );
 
     final list = result.data?['collectionPaymentMethods'] as List?;
-    if (list == null) return [];
+    final methods = <PaymentMethod>[];
+    if (list != null) {
+      methods.addAll(
+        list.map((e) => PaymentMethod.fromJson(e as Map<String, dynamic>)),
+      );
+    }
 
-    return list
-        .map((e) => PaymentMethod.fromJson(e as Map<String, dynamic>))
-        .toList();
+    // Bagisto GraphQL API's PaymentMethodsProvider omits Cart::setCart($cart),
+    // which causes CashOnDelivery::isAvailable() to evaluate $this->cart to null
+    // and drops 'cashondelivery' from collectionPaymentMethods even when enabled in
+    // Admin and functional in Web checkout.
+    // Ensure 'cashondelivery' is available for mobile customers.
+    final hasCod = methods.any(
+      (m) => m.method.toLowerCase() == 'cashondelivery',
+    );
+    if (!hasCod) {
+      methods.add(
+        const PaymentMethod(
+          id: 'cashondelivery',
+          method: 'cashondelivery',
+          title: 'Cash On Delivery',
+          description: 'Cash On Delivery',
+          isAllowed: true,
+        ),
+      );
+    }
+
+    return methods;
   }
 
   // ─── Mutations ───────────────────────────────────────────────────────────

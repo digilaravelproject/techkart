@@ -107,9 +107,10 @@ class ClearRazorpayTrigger extends CheckoutEvent {}
 /// Payment completed on gateway (Razorpay, etc.)
 class OnPaymentGatewaySuccess extends CheckoutEvent {
   final String? orderId;
-  const OnPaymentGatewaySuccess({this.orderId});
+  final String? paymentId;
+  const OnPaymentGatewaySuccess({this.orderId, this.paymentId});
   @override
-  List<Object?> get props => [orderId];
+  List<Object?> get props => [orderId, paymentId];
 }
 
 /// Payment cancelled by user on gateway
@@ -660,54 +661,46 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
               }
             } else {
               try {
-                final rates = await repository.getShippingRates(
-                  queryToken: queryToken,
-                );
+                // Fetch shipping rates & payment methods in parallel for maximum speed
+                final results = await Future.wait([
+                  repository.getShippingRates(queryToken: queryToken),
+                  repository.getPaymentMethods(),
+                ]);
+                final rates = results[0] as List<ShippingRate>;
+                final methods = results[1] as List<PaymentMethod>;
+
                 debugPrint(
-                  '[CheckoutBloc] Auto-fetched ${rates.length} shipping rates',
+                  '[CheckoutBloc] Parallel loaded: ${rates.length} shipping rates, ${methods.length} payment methods',
                 );
 
-                if (rates.isNotEmpty) {
-                  final firstRate = rates.first;
-                  final shipResp = await repository.saveShippingMethod(
-                    firstRate.method,
-                  );
-                  debugPrint(
-                    '[CheckoutBloc] Auto-saved shipping method: ${firstRate.code}, success=${shipResp.success}',
-                  );
+                final firstRate = rates.isNotEmpty ? rates.first : null;
+                final firstMethod = methods.isNotEmpty ? methods.first.method : null;
 
-                  if (shipResp.success) {
-                    final methods = await repository.getPaymentMethods();
+                emit(
+                  state.copyWith(
+                    shippingRates: rates,
+                    selectedShippingMethod: firstRate?.code,
+                    paymentMethods: methods,
+                    selectedPaymentMethod: firstMethod,
+                    status: CheckoutStatus.paymentMethodsFetched,
+                    isLoading: false,
+                  ),
+                );
+
+                // Auto-save shipping method in the background without blocking UI
+                if (firstRate != null) {
+                  repository.saveShippingMethod(firstRate.method).then((shipResp) {
                     debugPrint(
-                      '[CheckoutBloc] Auto-fetched ${methods.length} payment methods',
+                      '[CheckoutBloc] Background saved shipping: ${firstRate.code}, success=${shipResp.success}',
                     );
-                    emit(
-                      state.copyWith(
-                        shippingRates: rates,
-                        selectedShippingMethod: firstRate.code,
-                        status: CheckoutStatus.paymentMethodsFetched,
-                        paymentMethods: methods,
-                      ),
-                    );
-                  } else {
-                    emit(
-                      state.copyWith(
-                        shippingRates: rates,
-                        status: CheckoutStatus.shippingRatesFetched,
-                      ),
-                    );
-                  }
-                } else {
-                  emit(
-                    state.copyWith(
-                      shippingRates: rates,
-                      status: CheckoutStatus.shippingRatesFetched,
-                    ),
-                  );
+                    _requestCartRefresh();
+                  }).catchError((e) {
+                    debugPrint('[CheckoutBloc] Background save shipping error: $e');
+                  });
                 }
               } catch (e) {
                 debugPrint(
-                  '[CheckoutBloc] Auto-fetch shipping rates error: $e',
+                  '[CheckoutBloc] Auto-fetch shipping/payment error: $e',
                 );
               }
             }
@@ -799,55 +792,46 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
                 }
               } else {
                 try {
-                  final rates = await repository.getShippingRates(
-                    queryToken: fallbackQueryToken,
-                  );
+                  // Fetch shipping rates & payment methods in parallel for maximum speed
+                  final results = await Future.wait([
+                    repository.getShippingRates(queryToken: fallbackQueryToken),
+                    repository.getPaymentMethods(),
+                  ]);
+                  final rates = results[0] as List<ShippingRate>;
+                  final methods = results[1] as List<PaymentMethod>;
+
                   debugPrint(
-                    '[CheckoutBloc] Auto-fetched ${rates.length} shipping rates',
+                    '[CheckoutBloc] Parallel loaded (fallback): ${rates.length} shipping rates, ${methods.length} payment methods',
                   );
 
-                  if (rates.isNotEmpty) {
-                    final firstRate = rates.first;
-                    final shipResp = await repository.saveShippingMethod(
-                      firstRate.method,
-                    );
-                    debugPrint(
-                      '[CheckoutBloc] Auto-saved shipping: ${firstRate.code}, success=${shipResp.success}',
-                    );
+                  final firstRate = rates.isNotEmpty ? rates.first : null;
+                  final firstMethod = methods.isNotEmpty ? methods.first.method : null;
 
-                    if (shipResp.success) {
-                      _requestCartRefresh();
-                      final methods = await repository.getPaymentMethods();
+                  emit(
+                    state.copyWith(
+                      shippingRates: rates,
+                      selectedShippingMethod: firstRate?.code,
+                      paymentMethods: methods,
+                      selectedPaymentMethod: firstMethod,
+                      status: CheckoutStatus.paymentMethodsFetched,
+                      isLoading: false,
+                    ),
+                  );
+
+                  // Auto-save shipping method in the background without blocking UI
+                  if (firstRate != null) {
+                    repository.saveShippingMethod(firstRate.method).then((shipResp) {
                       debugPrint(
-                        '[CheckoutBloc] Auto-fetched ${methods.length} payment methods',
+                        '[CheckoutBloc] Background saved shipping: ${firstRate.code}, success=${shipResp.success}',
                       );
-                      emit(
-                        state.copyWith(
-                          shippingRates: rates,
-                          selectedShippingMethod: firstRate.code,
-                          status: CheckoutStatus.paymentMethodsFetched,
-                          paymentMethods: methods,
-                        ),
-                      );
-                    } else {
-                      emit(
-                        state.copyWith(
-                          shippingRates: rates,
-                          status: CheckoutStatus.shippingRatesFetched,
-                        ),
-                      );
-                    }
-                  } else {
-                    emit(
-                      state.copyWith(
-                        shippingRates: rates,
-                        status: CheckoutStatus.shippingRatesFetched,
-                      ),
-                    );
+                      _requestCartRefresh();
+                    }).catchError((e) {
+                      debugPrint('[CheckoutBloc] Background save shipping error: $e');
+                    });
                   }
                 } catch (e) {
                   debugPrint(
-                    '[CheckoutBloc] Auto-fetch shipping rates error: $e',
+                    '[CheckoutBloc] Auto-fetch shipping/payment error: $e',
                   );
                 }
               }
@@ -1025,61 +1009,48 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         }
       } else {
         try {
-          final rates = await repository.getShippingRates(
-            queryToken: queryToken,
-          );
+          // Parallel fetch shipping rates & payment methods
+          final results = await Future.wait([
+            repository.getShippingRates(queryToken: queryToken),
+            repository.getPaymentMethods(),
+          ]);
+          final rates = results[0] as List<ShippingRate>;
+          final methods = results[1] as List<PaymentMethod>;
+
           debugPrint(
-            '[CheckoutBloc] Auto-fetched ${rates.length} shipping rates after address change',
+            '[CheckoutBloc] Parallel loaded after address change: ${rates.length} rates, ${methods.length} methods',
           );
 
-          if (rates.isNotEmpty) {
-            final firstRate = rates.first;
-            final shipResp = await repository.saveShippingMethod(
-              firstRate.method,
-            );
-            debugPrint(
-              '[CheckoutBloc] Auto-saved shipping: ${firstRate.code}, success=${shipResp.success}',
-            );
+          final firstRate = rates.isNotEmpty ? rates.first : null;
+          final firstMethod = methods.isNotEmpty ? methods.first.method : null;
 
-            if (shipResp.success) {
-              _requestCartRefresh();
-              final methods = await repository.getPaymentMethods();
+          emit(
+            state.copyWith(
+              shippingRates: rates,
+              selectedShippingMethod: firstRate?.code,
+              paymentMethods: methods,
+              selectedPaymentMethod: firstMethod,
+              status: CheckoutStatus.paymentMethodsFetched,
+              isLoading: false,
+            ),
+          );
+
+          if (firstRate != null) {
+            repository.saveShippingMethod(firstRate.method).then((shipResp) {
               debugPrint(
-                '[CheckoutBloc] Auto-fetched ${methods.length} payment methods',
+                '[CheckoutBloc] Auto-saved shipping: ${firstRate.code}, success=${shipResp.success}',
               );
-              emit(
-                state.copyWith(
-                  shippingRates: rates,
-                  selectedShippingMethod: firstRate.code,
-                  status: CheckoutStatus.paymentMethodsFetched,
-                  paymentMethods: methods,
-                  isLoading: false,
-                ),
-              );
-            } else {
-              emit(
-                state.copyWith(
-                  shippingRates: rates,
-                  status: CheckoutStatus.shippingRatesFetched,
-                  isLoading: false,
-                ),
-              );
-            }
-          } else {
-            emit(
-              state.copyWith(
-                shippingRates: rates,
-                status: CheckoutStatus.shippingRatesFetched,
-                isLoading: false,
-              ),
-            );
+              _requestCartRefresh();
+            }).catchError((e) {
+              debugPrint('[CheckoutBloc] Background save shipping error: $e');
+            });
           }
         } catch (e) {
-          debugPrint('[CheckoutBloc] Auto-fetch shipping rates error: $e');
+          debugPrint('[CheckoutBloc] Auto-fetch shipping error: $e');
           emit(
             state.copyWith(
               isLoading: false,
-              errorMessage: 'Address saved but failed to load shipping rates',
+              errorMessage: 'Address saved but failed to load shipping or payment methods',
             ),
           );
         }
@@ -1262,71 +1233,49 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
         }
       } else {
         try {
-          final rates = await repository.getShippingRates(
-            queryToken: queryToken,
+          // Parallel fetch shipping rates & payment methods
+          final results = await Future.wait([
+            repository.getShippingRates(queryToken: queryToken),
+            repository.getPaymentMethods(),
+          ]);
+          final rates = results[0] as List<ShippingRate>;
+          final methods = results[1] as List<PaymentMethod>;
+
+          debugPrint(
+            '[CheckoutBloc] Parallel loaded: ${rates.length} shipping rates, ${methods.length} payment methods',
           );
-          debugPrint('[CheckoutBloc] fetched ${rates.length} shipping rates');
 
-          // Auto-select first shipping method if available
-          if (rates.isNotEmpty) {
-            final firstRate = rates.first;
-            debugPrint(
-              '[CheckoutBloc] auto-selecting first shipping method: ${firstRate.code}',
-            );
+          final firstRate = rates.isNotEmpty ? rates.first : null;
+          final firstMethod = methods.isNotEmpty ? methods.first.method : null;
 
-            // Save the first shipping method
-            final shipResp = await repository.saveShippingMethod(
-              firstRate.method,
-            );
-            debugPrint(
-              '[CheckoutBloc] saveShipping success=${shipResp.success}',
-            );
+          emit(
+            state.copyWith(
+              shippingRates: rates,
+              selectedShippingMethod: firstRate?.code,
+              paymentMethods: methods,
+              selectedPaymentMethod: firstMethod,
+              status: CheckoutStatus.paymentMethodsFetched,
+              isLoading: false,
+            ),
+          );
 
-            if (shipResp.success) {
+          // Auto-save the first shipping method in background
+          if (firstRate != null) {
+            repository.saveShippingMethod(firstRate.method).then((shipResp) {
+              debugPrint('[CheckoutBloc] saveShipping success=${shipResp.success}');
               _requestCartRefresh();
-              // Fetch payment methods
-              final methods = await repository.getPaymentMethods();
-              debugPrint(
-                '[CheckoutBloc] fetched ${methods.length} payment methods',
-              );
-
-              emit(
-                state.copyWith(
-                  shippingRates: rates,
-                  selectedShippingMethod: firstRate.code,
-                  status: CheckoutStatus.paymentMethodsFetched,
-                  paymentMethods: methods,
-                  isLoading: false,
-                ),
-              );
-            } else {
-              // Shipping method save failed, but we have rates
-              emit(
-                state.copyWith(
-                  shippingRates: rates,
-                  status: CheckoutStatus.shippingRatesFetched,
-                  isLoading: false,
-                ),
-              );
-            }
-          } else {
-            // No shipping rates available
-            emit(
-              state.copyWith(
-                shippingRates: rates,
-                status: CheckoutStatus.shippingRatesFetched,
-                isLoading: false,
-              ),
-            );
+            }).catchError((e) {
+              debugPrint('[CheckoutBloc] Background save shipping error: $e');
+            });
           }
         } catch (e) {
-          debugPrint('[CheckoutBloc] getShippingRates error: $e');
+          debugPrint('[CheckoutBloc] getShippingRates/PaymentMethods error: $e');
           emit(
             state.copyWith(
               isLoading: false,
               errorMessage: ErrorMapper.getUserMessage(
                 e,
-                context: 'loading shipping rates',
+                context: 'loading shipping or payment options',
               ),
             ),
           );
@@ -1417,12 +1366,19 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     }
   }
 
-  /// 4) Local payment selection (no API call until PlaceOrder)
-  void _onSelectPaymentMethod(
+  /// 4) Payment selection & background pre-save
+  Future<void> _onSelectPaymentMethod(
     SelectPaymentMethod event,
     Emitter<CheckoutState> emit,
-  ) {
+  ) async {
     emit(state.copyWith(selectedPaymentMethod: event.paymentMethodCode));
+    try {
+      _refreshAuthToken();
+      await repository.savePaymentMethod(event.paymentMethodCode);
+      debugPrint('[CheckoutBloc] Pre-saved payment method: ${event.paymentMethodCode}');
+    } catch (e) {
+      debugPrint('[CheckoutBloc] Pre-save payment method non-fatal error: $e');
+    }
   }
 
   /// 5) Place order: save payment method → create order.
@@ -1473,7 +1429,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
           debugPrint('[CheckoutBloc] Triggering native Razorpay SDK');
           emit(
             state.copyWith(
-              isPlacingOrder: false,
+              isPlacingOrder: true, // Keep loader visible while Razorpay activity initializes
               triggerRazorpay: true,
             ),
           );
@@ -1559,43 +1515,60 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     OnPaymentGatewaySuccess event,
     Emitter<CheckoutState> emit,
   ) async {
-    emit(state.copyWith(isPlacingOrder: true));
+    emit(state.copyWith(isPlacingOrder: true, clearError: true));
     try {
+      // 1. Razorpay payment succeeded natively on device.
+      // 2. To allow Bagisto's createCheckoutOrder to create the real order in DB
+      //    (instead of returning redirect: true), save non-redirect method 'moneytransfer'.
+      _refreshAuthToken();
+      try {
+        await repository.savePaymentMethod('moneytransfer');
+        debugPrint('[CheckoutBloc] Saved final payment method for order creation');
+      } catch (e) {
+        debugPrint('[CheckoutBloc] savePaymentMethod moneytransfer fallback error: $e');
+        try {
+          await repository.savePaymentMethod('cashondelivery');
+        } catch (_) {}
+      }
+
+      // 3. Place order via GraphQL createCheckoutOrder
       final orderResp = await repository.placeOrder();
       _requestCartRefresh();
-      emit(
-        state.copyWith(
-          status: CheckoutStatus.orderPlaced,
-          isPlacingOrder: false,
-          clearPaymentGatewayUrl: true,
-          clearTriggerRazorpay: true,
-          orderResponse: orderResp.success && orderResp.orderId != null
-              ? orderResp
-              : CheckoutOrderResponse(
-                  success: true,
-                  orderId: event.orderId,
-                  orderIncrementId: event.orderId,
-                  message: 'Order placed successfully!',
-                ),
-          successMessage: 'Order placed successfully!',
-        ),
-      );
+
+      debugPrint('[CheckoutBloc] placeOrder result: orderId=${orderResp.orderId}, success=${orderResp.success}');
+
+      if (orderResp.success && orderResp.orderId != null && orderResp.orderId!.isNotEmpty) {
+        emit(
+          state.copyWith(
+            status: CheckoutStatus.orderPlaced,
+            isPlacingOrder: false,
+            clearPaymentGatewayUrl: true,
+            clearTriggerRazorpay: true,
+            orderResponse: orderResp,
+            successMessage: orderResp.message ?? 'Order placed successfully!',
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            isPlacingOrder: false,
+            clearPaymentGatewayUrl: true,
+            clearTriggerRazorpay: true,
+            errorMessage: orderResp.message ??
+                'Payment received (${event.paymentId ?? event.orderId}), but order creation failed. Please contact support.',
+          ),
+        );
+      }
     } catch (e) {
       debugPrint('[CheckoutBloc] placeOrder after payment gateway success error: $e');
       _requestCartRefresh();
       emit(
         state.copyWith(
-          status: CheckoutStatus.orderPlaced,
           isPlacingOrder: false,
           clearPaymentGatewayUrl: true,
           clearTriggerRazorpay: true,
-          orderResponse: CheckoutOrderResponse(
-            success: true,
-            orderId: event.orderId,
-            orderIncrementId: event.orderId,
-            message: 'Order placed successfully!',
-          ),
-          successMessage: 'Order placed successfully!',
+          errorMessage:
+              'Payment received (${event.paymentId ?? event.orderId}), but failed to create order: ${ErrorMapper.getUserMessage(e, context: 'creating order')}. Please contact support.',
         ),
       );
     }

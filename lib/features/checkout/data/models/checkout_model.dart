@@ -367,6 +367,8 @@ class CheckoutOrderResponse {
   final String? orderIncrementId;
   final bool success;
   final String? message;
+  final bool redirect;
+  final String? redirectUrl;
 
   const CheckoutOrderResponse({
     this.id,
@@ -374,15 +376,20 @@ class CheckoutOrderResponse {
     this.orderIncrementId,
     this.success = false,
     this.message,
+    this.redirect = false,
+    this.redirectUrl,
   });
 
   factory CheckoutOrderResponse.fromJson(Map<String, dynamic> json) {
+    final orderId = json['orderId']?.toString() ?? json['_id']?.toString() ?? json['id']?.toString();
     return CheckoutOrderResponse(
-      id: json['id']?.toString(),
-      orderId: json['orderId']?.toString(),
-      orderIncrementId: json['orderIncrementId']?.toString(),
-      success: json['success'] as bool? ?? (json['orderId'] != null),
+      id: orderId,
+      orderId: orderId,
+      orderIncrementId: json['orderIncrementId']?.toString() ?? orderId,
+      success: json['success'] as bool? ?? (orderId != null),
       message: json['message'] as String?,
+      redirect: json['redirect'] as bool? ?? false,
+      redirectUrl: json['redirectUrl'] as String?,
     );
   }
 }

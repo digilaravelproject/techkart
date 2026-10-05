@@ -212,6 +212,7 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
       _razorpay.open(options);
     } catch (e) {
       debugPrint('[Razorpay] Exception opening checkout: $e');
+      context.read<CheckoutBloc>().add(OnPaymentGatewayCancelled());
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to open Razorpay: $e'),
@@ -224,7 +225,10 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
   void _handleRazorpaySuccess(PaymentSuccessResponse response) {
     debugPrint('[Razorpay] Payment Success! paymentId=${response.paymentId}, orderId=${response.orderId}');
     context.read<CheckoutBloc>().add(
-      OnPaymentGatewaySuccess(orderId: response.paymentId),
+      OnPaymentGatewaySuccess(
+        orderId: response.orderId ?? response.paymentId,
+        paymentId: response.paymentId,
+      ),
     );
   }
 
@@ -308,6 +312,26 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
           // Handle native Razorpay trigger
           if (state.triggerRazorpay) {
             context.read<CheckoutBloc>().add(ClearRazorpayTrigger());
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Text('Opening Razorpay Payment...'),
+                  ],
+                ),
+                duration: Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
             _openRazorpay(state);
           }
 
@@ -2951,25 +2975,43 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
                   ? null
                   : () => context.read<CheckoutBloc>().add(PlaceOrder()),
               child: Container(
-                width: 131,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                constraints: const BoxConstraints(minWidth: 140),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: canPlace ? AppColors.primary500 : AppColors.neutral400,
                   borderRadius: BorderRadius.circular(54),
                 ),
                 child: Center(
                   child: state.isPlacingOrder
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.white,
-                          ),
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              state.selectedPaymentMethod == 'razorpay'
+                                  ? 'Opening...'
+                                  : 'Placing...',
+                              style: const TextStyle(
+                                fontFamily: 'Roboto',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: AppColors.white,
+                              ),
+                            ),
+                          ],
                         )
                       : Text(
                           AppLocalizations.of(context)!.checkoutPlaceOrder,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontFamily: 'Roboto',
                             fontWeight: FontWeight.w700,
                             fontSize: 16,

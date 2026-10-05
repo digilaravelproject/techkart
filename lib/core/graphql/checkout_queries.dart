@@ -168,8 +168,9 @@ class CheckoutMutations {
     mutation createCheckoutOrder {
       createCheckoutOrder(input: {}) {
         checkoutOrder {
-          id
           orderId
+          redirect
+          redirectUrl
           success
           message
         }

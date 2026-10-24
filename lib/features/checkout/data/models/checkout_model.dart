@@ -383,7 +383,7 @@ class CheckoutOrderResponse {
   factory CheckoutOrderResponse.fromJson(Map<String, dynamic> json) {
     final orderId = json['orderId']?.toString() ?? json['_id']?.toString() ?? json['id']?.toString();
     return CheckoutOrderResponse(
-      id: orderId,
+      id: json['id']?.toString() ?? orderId,
       orderId: orderId,
       orderIncrementId: json['orderIncrementId']?.toString() ?? orderId,
       success: json['success'] as bool? ?? (orderId != null),

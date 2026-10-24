@@ -3,6 +3,36 @@
 library;
 
 class StoreConfigQueries {
+  /// Public store settings of the current channel (admin configuration).
+  static const String getStoreConfig = r'''
+    query storeConfig {
+      storeConfig {
+        id
+        guestCheckoutEnabled
+        reorderEnabled
+        minimumOrderEnabled
+        minimumOrderAmount
+        minimumOrderIncludesDiscount
+        minimumOrderIncludesTax
+        minimumOrderMessage
+        customerReviewEnabled
+        guestReviewEnabled
+        reviewerNameCensored
+        compareEnabled
+        wishlistEnabled
+        imageSearchEnabled
+        socialShareEnabled
+        newsletterEnabled
+        buyNowButtonEnabled
+        cartSummary
+        cartPageEnabled
+        loginRedirectTo
+        miniCartEnabled
+        miniCartOfferInfo
+      }
+    }
+  ''';
+
   /// Fetches the configured Bagisto channel with its locales, currencies,
   /// and defaults used during app startup.
   static const String getChannelById = r'''
@@ -128,6 +158,7 @@ class CategoryQueries {
               _id
               name
               slug
+              description
               urlPath
             }
             children {
@@ -157,8 +188,8 @@ class CategoryQueries {
   /// GET_HOME_CATEGORIES – flat list with logo
   /// Source: nextjs-commerce/src/graphql/catelog/queries/HomeCategories.ts
   static const String getHomeCategories = r'''
-    query Categories {
-      categories {
+    query Categories($first: Int) {
+      categories(first: $first) {
         edges {
           node {
             id
@@ -166,6 +197,10 @@ class CategoryQueries {
             logoUrl
             position
             status
+            parent {
+              id
+              _id
+            }
             translation {
               name
               slug
@@ -195,6 +230,8 @@ class ProductQueries {
       formattedMinimumPrice
       specialPrice
       formattedSpecialPrice
+      regularMinimumPrice
+      formattedRegularMinimumPrice
       isSaleable
        reviews {
        totalCount
@@ -519,6 +556,7 @@ class ProductQueries {
             qty
             location
             showLocation
+            allowCancellation
             availableFrom
             availableTo
             defaultSlot {
@@ -681,6 +719,7 @@ class ProductQueries {
             qty
             location
             showLocation
+            allowCancellation
             availableFrom
             availableTo
   ''';
@@ -1098,6 +1137,7 @@ $slotFields
             qty
             location
             showLocation
+            allowCancellation
             availableFrom
             availableTo
             defaultSlot {
@@ -1297,11 +1337,10 @@ $slotFields
   ''';
 }
 
-class ThemeQueries {
-  /// GET_THEME_CUSTOMIZATION
-  /// Updated for Bagisto 2.4 - uses sections instead of themeCustomizations
-  static const String getThemeCustomization = r'''
-    query themeSections($first: Int) {
+class SectionQueries {
+  /// Published sections for the current channel's active theme.
+  static const String getSections = r'''
+    query sections($first: Int) {
       sections(first: $first) {
         edges {
           node {
@@ -1311,15 +1350,9 @@ class ThemeQueries {
             name
             status
             sortOrder
-            translations {
-              edges {
-                node {
-                  _id
-                  sectionId
-                  locale
-                  options
-                }
-              }
+            translation {
+              locale
+              options
             }
           }
         }
@@ -1330,6 +1363,18 @@ class ThemeQueries {
 
 /// Cart GraphQL mutations
 /// Source: nextjs-commerce/src/graphql/cart/mutations/
+class CartQueries {
+  /// Per-product guest checkout flag (`guest_checkout` attribute).
+  static const String productGuestCheckout = r'''
+    query productGuestCheckout($id: ID!) {
+      product(id: $id) {
+        id
+        guestCheckout
+      }
+    }
+  ''';
+}
+
 class CartMutations {
   /// CREATE_CART_TOKEN – creates a guest cart session
   /// Source: nextjs-commerce/src/graphql/cart/mutations/CreateCartToken.ts

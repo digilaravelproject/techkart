@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/utils/phone_validation.dart';
 import '../../../../core/graphql/graphql_client.dart';
 import '../../../../core/currency/currency_formatter.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -91,6 +92,7 @@ class _CheckoutPageView extends StatefulWidget {
 
 class _CheckoutPageViewState extends State<_CheckoutPageView> {
   final TextEditingController _couponController = TextEditingController();
+  bool _couponApplyPending = false;
   bool _saveToAddressBook = true;
 
   bool _requiresShipping(CheckoutState state) => !state.isVirtualOnly;
@@ -103,6 +105,16 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
 
   bool _shouldOfferSaveToAddressBook(CheckoutState state) =>
       !state.isGuest && state.addresses.isEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    // Logged-in orders use the account email; show it in the form.
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      _billingEmailCtrl.text = authState.userEmail ?? '';
+    }
+  }
 
   // Local selection state for immediate UI response
   String? _selectedShippingMethod;
@@ -298,6 +310,9 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
       ],
       child: BlocConsumer<CheckoutBloc, CheckoutState>(
         listener: (context, state) {
+          if (!state.isLoading && state.errorMessage == null) {
+            _couponApplyPending = false;
+          }
           if (state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -305,7 +320,10 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
                 backgroundColor: Colors.red,
               ),
             );
-            _couponController.clear();
+            // Only a failed coupon attempt clears the coupon field; errors
+            // from other steps (address, shipping) leave it alone.
+            if (_couponApplyPending) _couponController.clear();
+            _couponApplyPending = false;
             context.read<CheckoutBloc>().add(ClearCheckoutMessage());
           }
 
@@ -430,6 +448,9 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
                 child: Column(
                   children: [
                     _buildAppBar(context),
+                    if (state.isAccountSuspended)
+                      Expanded(child: _buildSuspendedNotice(isDark))
+                    else
                     Expanded(
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
@@ -1429,11 +1450,22 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
     return TextFormField(
       controller: ctrl,
       keyboardType: keyboardType,
-      validator: required
-          ? (v) => (v == null || v.trim().isEmpty)
-                ? AppLocalizations.of(context)!.checkoutFieldRequired(label)
-                : null
-          : null,
+      validator: (v) {
+        final value = v?.trim() ?? '';
+        if (value.isEmpty) {
+          return required
+              ? AppLocalizations.of(context)!.checkoutFieldRequired(label)
+              : null;
+        }
+        // Phone fields follow the storefront `PhoneNumber` rule.
+        if (keyboardType == TextInputType.phone &&
+            !isValidPhoneNumber(value)) {
+          return AppLocalizations.of(
+            context,
+          )!.accountPleaseEnterValidContactNumber;
+        }
+        return null;
+      },
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
@@ -1896,6 +1928,36 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
     );
   }
 
+  /// Shown instead of the checkout steps when the customer is suspended.
+  Widget _buildSuspendedNotice(bool isDark) {
+    return Center(
+      key: const ValueKey('checkout_account_suspended'),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.block_outlined,
+              size: 56,
+              color: AppColors.errorRed,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              AppLocalizations.of(context)!.checkoutAccountSuspended,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 16,
+                color: isDark ? AppColors.neutral200 : AppColors.neutral800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _onSaveAddress(BuildContext context, CheckoutState state) {
     Map<String, dynamic> input;
     final useSameAddressForShipping = _usesBillingAsShipping(state);
@@ -2111,9 +2173,7 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      isBooking
-                          ? '$pricePerUnit x N/A'
-                          : '$pricePerUnit x $quantity ${quantity == 1 ? AppLocalizations.of(context)!.cartUnit : AppLocalizations.of(context)!.cartUnits}',
+                      '$pricePerUnit x $quantity ${quantity == 1 ? AppLocalizations.of(context)!.cartUnit : AppLocalizations.of(context)!.cartUnits}',
                       style: TextStyle(
                         fontFamily: 'Roboto',
                         fontWeight: FontWeight.w400,
@@ -2778,6 +2838,7 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
               onTap: () {
                 final code = _couponController.text.trim();
                 if (code.isNotEmpty) {
+                  _couponApplyPending = true;
                   context.read<CheckoutBloc>().add(
                     ApplyCheckoutCoupon(couponCode: code),
                   );

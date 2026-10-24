@@ -32,6 +32,9 @@ Map<String, dynamic> _flatCategory(int id, String name, Object? status) => {
   'logoUrl': null,
   'position': id,
   'status': status,
+  'parent': id == 1
+      ? null
+      : {'__typename': 'Category', 'id': '/api/shop/categories/1', '_id': 1},
   'translation': {
     '__typename': 'CategoryTranslation',
     'id': '/api/shop/category-translations/$id',
@@ -72,9 +75,10 @@ void main() {
   test('home carousel hides inactive categories', () async {
     final repository = HomeRepository(client: _client(_categoriesData()));
 
+    // No carousel filter: every active category, like the storefront.
     final categories = await repository.fetchHomeCategories();
 
-    expect(categories.map((c) => c.name), ['Men', 'Books']);
+    expect(categories.map((c) => c.name), ['Root', 'Men', 'Books']);
   });
 
   test('search categories hide inactive categories', () async {

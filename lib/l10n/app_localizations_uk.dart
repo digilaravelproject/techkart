@@ -1892,4 +1892,117 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get accountReviewVideoLoadFailed => 'Не вдалося відтворити це відео';
+
+  @override
+  String accountShippedCount(int count) {
+    return 'Відправлено: $count';
+  }
+
+  @override
+  String get accountReturnNoEligibleOrders =>
+      'Наразі немає замовлень, доступних для повернення';
+
+  @override
+  String get accountRequestReturn => 'Запросити повернення';
+
+  @override
+  String get accountRefunded => 'Повернено';
+
+  @override
+  String get accountCanceledQty => 'Скасовано';
+
+  @override
+  String get productBookingCancellation => 'Скасування';
+
+  @override
+  String get productBookingCancellationNotAllowed => 'Скасування не дозволено';
+
+  @override
+  String get accountBookingItemsNotCanceled =>
+      'Бронювання в цьому замовленні не буде скасовано.';
+
+  @override
+  String cartQtyValue(int count) {
+    return 'К-сть: $count';
+  }
+
+  @override
+  String get checkoutAccountSuspended =>
+      'Ваш обліковий запис призупинено. Ви можете переглядати магазин, але не можете оформлювати замовлення.';
+
+  @override
+  String get accountGenderRequiredLabel => 'Стать *';
+
+  @override
+  String get accountGenderRequired => 'Вкажіть стать';
+
+  @override
+  String get accountPhoneRequiredLabel => 'Телефон *';
+
+  @override
+  String get cartGuestCheckoutNotAllowed =>
+      'Увійдіть, щоб оформити замовлення на ці товари.';
+
+  @override
+  String get accountEuWithdraw => 'Відмовитися від договору';
+
+  @override
+  String get accountEuWithdrawReason => 'Причина (необов\'язково)';
+
+  @override
+  String get accountEuWithdrawSubmit => 'Надіслати відмову';
+
+  @override
+  String get accountEuWithdrawSubmitted => 'Ваш запит на відмову отримано.';
+
+  @override
+  String accountEuWithdrawStatus(String status) {
+    return 'Запит на відмову: $status';
+  }
+
+  @override
+  String get accountEuWithdrawGuestDescription =>
+      'Введіть номер замовлення та email, вказаний у замовленні, щоб відмовитися від договору.';
+
+  @override
+  String get accountEuWithdrawOrderNumber => 'Номер замовлення *';
+
+  @override
+  String get accountEuWithdrawEmail => 'Email замовлення *';
+
+  @override
+  String get accountEuWithdrawFieldRequired => 'Обов\'язкове поле';
+
+  @override
+  String get accountRefunds => 'Повернення коштів';
+
+  @override
+  String get accountShippingAndHandling => 'Доставка й обробка';
+
+  @override
+  String get accountContactUsDescription =>
+      'Напишіть нам, і ми відповімо якомога швидше';
+
+  @override
+  String get accountPhoneNumber => 'Номер телефону';
+
+  @override
+  String get accountWhatsOnYourMind => 'Що ви хочете повідомити?';
+
+  @override
+  String get accountDescribeHere => 'Опишіть тут';
+
+  @override
+  String get accountSubmit => 'Надіслати';
+
+  @override
+  String cartMinimumOrderAmount(String amount) {
+    return 'Мінімальна сума замовлення: $amount';
+  }
+
+  @override
+  String get accountPrice => 'Ціна';
+
+  @override
+  String get accountQty => 'К-сть';
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/store_config/store_config.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/navigation/app_navigator.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -18,6 +19,9 @@ class ProductActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Cart page off in admin: no Add to Cart / Buy Now at all.
+    if (!StoreConfig.of(context).showCartPage) return const SizedBox.shrink();
 
     return BlocListener<CartBloc, CartState>(
       listener: (context, cartState) {
@@ -64,14 +68,27 @@ class ProductActionBar extends StatelessWidget {
           child: BlocBuilder<CartBloc, CartState>(
             builder: (context, cartState) {
               final isAdding = cartState.isAddingToCart;
+              // Out of stock: both actions dimmed and disabled, like the web.
+              final isOutOfStock = context.select<ProductDetailBloc, bool>(
+                (bloc) => bloc.state.isOutOfStock,
+              );
+              final disabledColor = isDark
+                  ? AppColors.neutral600
+                  : AppColors.neutral400;
+              final showBuyNow = StoreConfig.of(context).showBuyNow;
 
               return Row(
                 children: [
                   // ── Add to Cart (secondary) ──
                   Expanded(
                     child: GestureDetector(
-                      onTap: isAdding ? null : () => _addToCart(context),
+                      onTap: isAdding || isOutOfStock
+                          ? null
+                          : () => _addToCart(context),
                       child: Container(
+                        key: isOutOfStock
+                            ? const ValueKey('product_add_to_cart_disabled')
+                            : null,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
                           border: Border.all(
@@ -97,23 +114,30 @@ class ProductActionBar extends StatelessWidget {
                                   fontFamily: 'Roboto',
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.primary500,
+                                  color: isOutOfStock
+                                      ? disabledColor
+                                      : AppColors.primary500,
                                 ),
                               ),
                       ),
                     ),
                   ),
 
+                  if (showBuyNow) ...[
                   const SizedBox(width: 16),
 
                   // ── Buy Now (primary) ──
                   Expanded(
                     child: GestureDetector(
-                      onTap: isAdding ? null : () => _buyNow(context),
+                      onTap: isAdding || isOutOfStock
+                          ? null
+                          : () => _buyNow(context),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
-                          color: AppColors.primary500,
+                          color: isOutOfStock
+                              ? disabledColor
+                              : AppColors.primary500,
                           borderRadius: BorderRadius.circular(54),
                         ),
                         alignment: Alignment.center,
@@ -129,6 +153,7 @@ class ProductActionBar extends StatelessWidget {
                       ),
                     ),
                   ),
+                  ],
                 ],
               );
             },

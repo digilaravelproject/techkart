@@ -16,12 +16,17 @@ class StaticContentWidget extends StatelessWidget {
   /// Callback when "View All" or any action button is pressed
   final VoidCallback? onViewAllPressed;
 
+  /// Called with the raw `href` when content wrapped in an `<a>` link
+  /// configured in the admin HTML is tapped.
+  final ValueChanged<String>? onLinkTap;
+
   const StaticContentWidget({
     super.key,
     required this.html,
     this.css,
     required this.baseUrl,
     this.onViewAllPressed,
+    this.onLinkTap,
   });
 
   @override
@@ -30,7 +35,8 @@ class StaticContentWidget extends StatelessWidget {
     if (html.contains('home-offer')) {
       return _buildOfferBar(context);
     } else if (html.contains('top-collection-container') ||
-        html.contains('top-collection-grid')) {
+        html.contains('top-collection-grid') ||
+        html.contains('collection-card-wrapper')) {
       return _buildTopCollections(context);
     } else if (html.contains('inline-col-wrapper')) {
       return _buildBoldCollections(context);
@@ -41,6 +47,59 @@ class StaticContentWidget extends StatelessWidget {
 
     // Fallback: try to extract and render images
     return _buildGenericContent(context);
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // LINK HELPERS
+  // ──────────────────────────────────────────────────────────────────────
+
+  static final RegExp _anchorPattern = RegExp(
+    r'''<a\b[^>]*\bhref\s*=\s*["']([^"']*)["'][^>]*>(.*?)</a>''',
+    caseSensitive: false,
+    dotAll: true,
+  );
+
+  static bool _isNavigable(String href) {
+    final value = href.trim().toLowerCase();
+    return value.isNotEmpty &&
+        value != '#' &&
+        !value.startsWith('javascript:') &&
+        !value.startsWith('mailto:') &&
+        !value.startsWith('tel:');
+  }
+
+  /// First navigable `href` in [htmlContent], or null.
+  static String? firstHref(String htmlContent) {
+    for (final match in _anchorPattern.allMatches(htmlContent)) {
+      final href = match.group(1)?.trim() ?? '';
+      if (_isNavigable(href)) return href;
+    }
+    return null;
+  }
+
+  /// Maps each image URL (as written in the HTML) that sits inside an
+  /// `<a href>` to that link.
+  static Map<String, String> imageLinks(String htmlContent) {
+    final links = <String, String>{};
+    for (final match in _anchorPattern.allMatches(htmlContent)) {
+      final href = match.group(1)?.trim() ?? '';
+      if (!_isNavigable(href)) continue;
+      for (final url in _extractAllImageUrls(match.group(2) ?? '')) {
+        links.putIfAbsent(url, () => href);
+      }
+    }
+    return links;
+  }
+
+  /// Wraps [child] in a tap handler when [link] is set.
+  Widget _linked(String? link, int index, Widget child) {
+    if (link == null || onLinkTap == null) return child;
+    return GestureDetector(
+      key: ValueKey('static_link_$index'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => onLinkTap!(link),
+      child: child,
+    );
   }
 
   // ──────────────────────────────────────────────────────────────────────
@@ -157,14 +216,18 @@ class StaticContentWidget extends StatelessWidget {
       r'<h2[^>]*>(.*?)</h2>',
       dotAll: true,
     ).firstMatch(html);
-    final title = titleMatch?.group(1)?.trim() ?? l10n.homeCollections;
+    final parsedTitle = _plainText(titleMatch?.group(1) ?? '');
+    final title = parsedTitle.isEmpty ? l10n.homeCollections : parsedTitle;
 
     // Extract collection cards — find each card block, then extract image + title
+    // Top Collections use `top-collection-card`; the Game Container uses
+    // `single-collection-card`.
     final cardBlockPattern = RegExp(
-      r'<div class="top-collection-card"[^>]*>(.*?)</div>',
+      r'<div class="(?:top|single)-collection-card"[^>]*>(.*?)</div>',
       dotAll: true,
     );
     final titlePattern = RegExp(r'<h3[^>]*>(.*?)</h3>', dotAll: true);
+    final links = imageLinks(html);
 
     final cards = <_CollectionCard>[];
 
@@ -172,12 +235,13 @@ class StaticContentWidget extends StatelessWidget {
       final blockHtml = block.group(0) ?? '';
       final imageUrl = _extractBestImageUrl(blockHtml);
       final cardTitleMatch = titlePattern.firstMatch(blockHtml);
-      final cardTitle = cardTitleMatch?.group(1)?.trim() ?? '';
+      final cardTitle = _plainText(cardTitleMatch?.group(1) ?? '');
 
       cards.add(
         _CollectionCard(
           imageUrl: _getFullUrl(imageUrl),
           title: cardTitle,
+          link: firstHref(blockHtml) ?? links[imageUrl],
         ),
       );
     }
@@ -187,7 +251,7 @@ class StaticContentWidget extends StatelessWidget {
       final images = _extractAllImageUrls(html);
       final titles = titlePattern
           .allMatches(html)
-          .map((m) => m.group(1)?.trim() ?? '')
+          .map((m) => _plainText(m.group(1) ?? ''))
           .toList();
 
       for (int i = 0; i < images.length && i < titles.length; i++) {
@@ -245,7 +309,11 @@ class StaticContentWidget extends StatelessWidget {
             ),
             itemCount: cards.length,
             itemBuilder: (context, index) {
-              return _buildCollectionCard(cards[index], context);
+              return _linked(
+                cards[index].link,
+                index,
+                _buildCollectionCard(cards[index], context),
+              );
             },
           ),
         ),
@@ -317,19 +385,28 @@ class StaticContentWidget extends StatelessWidget {
       r'<h2[^>]*>(.*?)</h2>',
       dotAll: true,
     ).firstMatch(html);
-    final title =
-        titleMatch?.group(1)?.trim().replaceAll(RegExp(r'\s+'), ' ') ?? '';
+    final title = _plainText(titleMatch?.group(1) ?? '');
 
     // Extract description
     final descMatch = RegExp(
       r'<p class="inline-col-description"[^>]*>(.*?)</p>',
       dotAll: true,
     ).firstMatch(html);
-    final description = descMatch?.group(1)?.trim() ?? '';
+    final description = _plainText(descMatch?.group(1) ?? '');
 
     // Check for button
+    // Button label as written in the admin HTML (e.g. "View Collections").
+    final buttonLabel = _plainText(
+      RegExp(
+            r'<button[^>]*>(.*?)</button>',
+            dotAll: true,
+          ).firstMatch(html)?.group(1) ??
+          '',
+    );
     final hasButton =
         html.contains('primary-button') || html.contains('<button');
+    // Admin can point the collection at a category/product with an <a href>.
+    final link = firstHref(html);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -411,7 +488,9 @@ class StaticContentWidget extends StatelessWidget {
                     if (hasButton) ...[
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: onViewAllPressed,
+                        onPressed: link != null && onLinkTap != null
+                            ? () => onLinkTap!(link)
+                            : onViewAllPressed,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary500,
                           foregroundColor: AppColors.white,
@@ -423,7 +502,9 @@ class StaticContentWidget extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: Text(l10n.homeViewAll),
+                        child: Text(
+                          buttonLabel.isNotEmpty ? buttonLabel : l10n.homeViewAll,
+                        ),
                       ),
                     ],
                   ],
@@ -450,8 +531,12 @@ class StaticContentWidget extends StatelessWidget {
     for (final block in cardBlockPattern.allMatches(html)) {
       final blockHtml = block.group(0) ?? '';
       final imageUrl = _extractBestImageUrl(blockHtml);
-      final cardTitle = titlePattern.firstMatch(blockHtml)?.group(1)?.trim() ?? '';
-      final cardDesc = descPattern.firstMatch(blockHtml)?.group(1)?.trim() ?? '';
+      final cardTitle = _plainText(
+        titlePattern.firstMatch(blockHtml)?.group(1) ?? '',
+      );
+      final cardDesc = _plainText(
+        descPattern.firstMatch(blockHtml)?.group(1) ?? '',
+      );
 
       if (imageUrl.isNotEmpty || cardTitle.isNotEmpty) {
         services.add(
@@ -620,6 +705,8 @@ class StaticContentWidget extends StatelessWidget {
   // URL HELPERS
   // ──────────────────────────────────────────────────────────────────────
 
+  static const String _mediaToken = '__media__/';
+
   String _getFullUrl(String path) {
     if (path.isEmpty) return '';
     if (path.startsWith('http://') || path.startsWith('https://')) {
@@ -628,7 +715,12 @@ class StaticContentWidget extends StatelessWidget {
     final cleanBase = baseUrl.endsWith('/')
         ? baseUrl.substring(0, baseUrl.length - 1)
         : baseUrl;
-    final cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    var cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    // Theme section images are stored as `__media__/...`; the storefront
+    // renders that token as the public `storage/` folder.
+    if (cleanPath.startsWith(_mediaToken)) {
+      cleanPath = 'storage/${cleanPath.substring(_mediaToken.length)}';
+    }
     return '$cleanBase/$cleanPath';
   }
 }
@@ -636,8 +728,9 @@ class StaticContentWidget extends StatelessWidget {
 class _CollectionCard {
   final String imageUrl;
   final String title;
+  final String? link;
 
-  _CollectionCard({required this.imageUrl, required this.title});
+  _CollectionCard({required this.imageUrl, required this.title, this.link});
 }
 
 class _ServiceCard {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/phone_validation.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../bloc/contact_us_cubit.dart';
@@ -180,12 +181,23 @@ class _ContactUsPageState extends State<ContactUsPage> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.accountContactUsDescription,
+                      style: TextStyle(
+                        fontFamily: 'Roboto',
+                        fontSize: 14,
+                        color: secondaryTextColor,
+                      ),
+                    ),
                     const SizedBox(height: 20),
 
+                    // Fields, labels, placeholders and required marks follow
+                    // the storefront Contact Us form.
                     _buildTextField(
                       label: l10n.accountName,
                       controller: _nameController,
-                      hintText: l10n.accountEnterYourName,
+                      hintText: l10n.accountName,
                       inputBg: inputBg,
                       textColor: textColor,
                       secondaryTextColor: secondaryTextColor,
@@ -198,7 +210,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
                     _buildTextField(
                       label: l10n.checkoutEmail,
                       controller: _emailController,
-                      hintText: l10n.accountEnterYourEmail,
+                      hintText: l10n.checkoutEmail,
                       keyboardType: TextInputType.emailAddress,
                       inputBg: inputBg,
                       textColor: textColor,
@@ -210,25 +222,24 @@ class _ContactUsPageState extends State<ContactUsPage> {
                     const SizedBox(height: 16),
 
                     _buildTextField(
-                      label: l10n.accountContact,
+                      label: l10n.accountPhoneNumber,
                       controller: _contactController,
-                      hintText: l10n.accountEnterYourPhoneNumber,
+                      hintText: l10n.accountPhoneNumber,
                       keyboardType: TextInputType.phone,
                       inputBg: inputBg,
                       textColor: textColor,
                       secondaryTextColor: secondaryTextColor,
                       isDark: isDark,
-                      isRequired: true,
                       validator: _validatePhone,
                     ),
                     const SizedBox(height: 16),
 
                     _buildTextField(
-                      label: l10n.accountMessage,
+                      label: l10n.accountWhatsOnYourMind,
                       controller: _messageController,
-                      hintText: l10n.accountEnterYourMessage,
-                      minLines: 4,
-                      maxLines: 6,
+                      hintText: l10n.accountDescribeHere,
+                      minLines: 6,
+                      maxLines: 10,
                       inputBg: inputBg,
                       textColor: textColor,
                       secondaryTextColor: secondaryTextColor,
@@ -257,7 +268,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
                               ),
                             ),
                             child: Text(
-                              l10n.accountSendMessage,
+                              l10n.accountSubmit,
                               style: const TextStyle(
                                 fontFamily: 'Roboto',
                                 fontWeight: FontWeight.w500,
@@ -399,11 +410,12 @@ class _ContactUsPageState extends State<ContactUsPage> {
         );
   }
 
+  // Validation mirrors the storefront contact form: name, email and message
+  // are required; contact is optional but must be a valid phone number.
   String? _validateName(String? value) {
     final l10n = AppLocalizations.of(context)!;
     final name = value?.trim() ?? '';
     if (name.isEmpty) return l10n.accountNameFieldEmpty;
-    if (name.length < 2) return l10n.accountNameMinChars;
     return null;
   }
 
@@ -423,9 +435,10 @@ class _ContactUsPageState extends State<ContactUsPage> {
   String? _validatePhone(String? value) {
     final l10n = AppLocalizations.of(context)!;
     final contact = value?.trim() ?? '';
-    if (contact.isEmpty) return l10n.accountContactNumberEmpty;
-    final digits = contact.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.length < 10) return l10n.accountPleaseEnterValidContactNumber;
+    if (contact.isEmpty) return null;
+    if (!isValidPhoneNumber(contact)) {
+      return l10n.accountPleaseEnterValidContactNumber;
+    }
     return null;
   }
 
@@ -433,7 +446,6 @@ class _ContactUsPageState extends State<ContactUsPage> {
     final l10n = AppLocalizations.of(context)!;
     final message = value?.trim() ?? '';
     if (message.isEmpty) return l10n.accountMessageFieldEmpty;
-    if (message.length < 10) return l10n.accountMessageMinChars;
     return null;
   }
 }

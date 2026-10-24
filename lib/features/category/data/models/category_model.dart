@@ -28,6 +28,20 @@ class CategoryModel {
   String get slug => translation?.slug ?? '';
   String get urlPath => translation?.urlPath ?? '';
   String? get imageUrl => logoUrl ?? logoPath;
+
+  /// Category description from the admin (HTML) as plain text; empty when
+  /// there is none.
+  String get plainDescription => (translation?.description ?? '')
+      .replaceAll(RegExp(r'<[^>]*>'), ' ')
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll('&amp;', '&')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&#39;', "'")
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .replaceAll(RegExp(r' (?=[,.;:!?])'), '')
+      .trim();
   bool get isActive => isActiveStatus(status);
 
   /// Category status from the API: "1"/1/true = active, "0"/0/false =
@@ -58,8 +72,8 @@ class CategoryModel {
 
     return CategoryModel(
       id: json['id']?.toString() ?? '',
-      numericId: _parseNullableInt(json['_id']),
-      position: _parseNullableInt(json['position']),
+      numericId: _parseInt(json['_id']),
+      position: _parseInt(json['position']),
       logoPath: json['logoPath'] as String?,
       logoUrl: json['logoUrl'] as String?,
       bannerUrl: json['bannerUrl'] as String?,
@@ -76,9 +90,9 @@ class CategoryModel {
   factory CategoryModel.fromHomeCategoryJson(Map<String, dynamic> json) {
     return CategoryModel(
       id: json['id']?.toString() ?? '',
-      numericId: _parseNullableInt(json['_id']),
+      numericId: _parseInt(json['_id']),
       logoUrl: json['logoUrl'] as String?,
-      position: _parseNullableInt(json['position']),
+      position: _parseInt(json['position']),
       status: json['status']?.toString(),
       translation: json['translation'] != null
           ? CategoryTranslation.fromJson(
@@ -118,7 +132,7 @@ class CategoryTranslation {
 }
 
 
-int? _parseNullableInt(dynamic value) {
+int? _parseInt(dynamic value) {
   if (value == null) return null;
   if (value is int) return value;
   if (value is num) return value.toInt();

@@ -37,10 +37,20 @@ class ThemeCustomization extends Equatable {
     // Parse translations → find the preferred locale, fallback to 'en', then first available
     Map<String, dynamic> options = {};
     Map<String, dynamic>? enOptions;
+    // The API may return locale codes in upper case (e.g. `AR`).
+    final wantedLocale = preferredLocale.toLowerCase();
+    final translationNodes = <Map<String, dynamic>>[];
+    final currentTranslation = json['translation'];
+    if (currentTranslation is Map) {
+      translationNodes.add(Map<String, dynamic>.from(currentTranslation));
+    }
     final translations = json['translations']?['edges'] as List? ?? [];
     for (final edge in translations) {
       final node = edge['node'] as Map<String, dynamic>? ?? {};
-      final locale = node['locale'] as String? ?? '';
+      translationNodes.add(node);
+    }
+    for (final node in translationNodes) {
+      final locale = (node['locale'] as String? ?? '').toLowerCase();
 
       Map<String, dynamic>? parsed;
       final rawOptions = node['options'];
@@ -60,7 +70,7 @@ class ThemeCustomization extends Equatable {
       }
       if (parsed == null || parsed.isEmpty) continue;
 
-      if (locale == preferredLocale) {
+      if (locale == wantedLocale) {
         options = parsed;
         break; // exact match found
       } else if (locale == 'en') {
@@ -97,13 +107,29 @@ class ThemeCustomization extends Equatable {
       id: json['id']?.toString() ?? '',
       type: json['type'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      status: json['status'] == true ||
+      status:
+          json['status'] == true ||
           json['status'] == 'true' ||
           json['status'] == 1 ||
           json['status'] == '1',
       sortOrder: _parseInt(json['sortOrder']) ?? 0,
       options: options,
     );
+  }
+
+  /// Carousel filters (`options.filters`). The API sends an empty JSON list
+  /// (`[]`) when a section was saved without filters, so anything that is
+  /// not a map means "no filters".
+  Map<String, dynamic> get filters {
+    final raw = options['filters'];
+    return raw is Map ? Map<String, dynamic>.from(raw) : const {};
+  }
+
+  /// Heading shown on the storefront: the section's `options.title`, or its
+  /// admin name when no title is set.
+  String get title {
+    final optionTitle = options['title']?.toString().trim() ?? '';
+    return optionTitle.isNotEmpty ? optionTitle : name;
   }
 
   @override
@@ -119,6 +145,10 @@ class HomeCategory extends Equatable {
   final String? logoUrl;
   final int position;
 
+  /// Whether the category has active sub-categories. Tapping it then opens
+  /// the Categories tab instead of the product list.
+  final bool hasChildren;
+
   const HomeCategory({
     required this.id,
     this.numericId,
@@ -126,9 +156,13 @@ class HomeCategory extends Equatable {
     required this.slug,
     this.logoUrl,
     required this.position,
+    this.hasChildren = false,
   });
 
-  factory HomeCategory.fromJson(Map<String, dynamic> json) {
+  factory HomeCategory.fromJson(
+    Map<String, dynamic> json, {
+    bool hasChildren = false,
+  }) {
     final translation = json['translation'] as Map<String, dynamic>? ?? {};
     int? numId = _parseInt(json['_id']);
     if (numId == null && json['id'] != null) {
@@ -142,11 +176,20 @@ class HomeCategory extends Equatable {
       slug: translation['slug'] as String? ?? '',
       logoUrl: json['logoUrl'] as String?,
       position: _parseInt(json['position']) ?? 0,
+      hasChildren: hasChildren,
     );
   }
 
   @override
-  List<Object?> get props => [id, numericId, name, slug, logoUrl, position];
+  List<Object?> get props => [
+    id,
+    numericId,
+    name,
+    slug,
+    logoUrl,
+    position,
+    hasChildren,
+  ];
 }
 
 /// A product for homepage product carousels.
@@ -164,6 +207,10 @@ class HomeProduct extends Equatable {
   final String? formattedPrice;
   final String? formattedMinimumPrice;
   final String? formattedSpecialPrice;
+
+  /// Lowest price before discounts (`regularMinimumPrice`).
+  final double? regularMinimumPrice;
+  final String? formattedRegularMinimumPrice;
   final bool isSaleable;
   final double averageRating;
   final int reviewCount;
@@ -182,6 +229,8 @@ class HomeProduct extends Equatable {
     this.formattedPrice,
     this.formattedMinimumPrice,
     this.formattedSpecialPrice,
+    this.regularMinimumPrice,
+    this.formattedRegularMinimumPrice,
     required this.isSaleable,
     this.averageRating = 0,
     this.reviewCount = 0,
@@ -236,11 +285,15 @@ class HomeProduct extends Equatable {
       urlKey: json['urlKey'] as String? ?? '',
       baseImageUrl: json['baseImageUrl'] as String?,
       price: _toDouble(json['price']),
-      minimumPrice: json['minimumPrice'] != null ? _toDouble(json['minimumPrice']) : null,
+      minimumPrice: json['minimumPrice'] != null
+          ? _toDouble(json['minimumPrice'])
+          : null,
       specialPrice: parsedSpecialPrice,
       formattedPrice: json['formattedPrice'] as String?,
       formattedMinimumPrice: json['formattedMinimumPrice'] as String?,
       formattedSpecialPrice: json['formattedSpecialPrice'] as String?,
+      regularMinimumPrice: json['regularMinimumPrice'] != null ? _toDouble(json['regularMinimumPrice']) : null,
+      formattedRegularMinimumPrice: json['formattedRegularMinimumPrice'] as String?,
       isSaleable: json['isSaleable'] == true || json['isSaleable'] == '1' || json['isSaleable'] == 1 || json['isSaleable'] == 'true',
       averageRating: avgRating,
       reviewCount: ratings.isNotEmpty ? ratings.length : fallbackReviewCount,
@@ -262,6 +315,8 @@ class HomeProduct extends Equatable {
       'formattedPrice': formattedPrice,
       'formattedMinimumPrice': formattedMinimumPrice,
       'formattedSpecialPrice': formattedSpecialPrice,
+      'regularMinimumPrice': regularMinimumPrice,
+      'formattedRegularMinimumPrice': formattedRegularMinimumPrice,
       'isSaleable': isSaleable,
       'averageRating': averageRating,
       'reviewCount': reviewCount,
@@ -277,16 +332,36 @@ class HomeProduct extends Equatable {
     return price;
   }
 
+  /// Whether the API reports a lower final price than the regular one
+  /// (`minimumPrice` below `regularMinimumPrice`). Covers special prices,
+  /// catalog rules and configurable/bundle products.
+  bool get _hasRegularPriceDiscount =>
+      regularMinimumPrice != null &&
+      minimumPrice != null &&
+      minimumPrice! > 0 &&
+      minimumPrice! < regularMinimumPrice!;
+
   /// Whether a discount exists.
-  bool get hasDiscount => specialPrice != null && specialPrice! > 0 && specialPrice! < price;
+  bool get hasDiscount =>
+      _hasRegularPriceDiscount ||
+      (specialPrice != null && specialPrice! > 0 && specialPrice! < price);
 
   /// Discount percentage (0–100).
   int get discountPercent {
+    if (_hasRegularPriceDiscount) {
+      return (((regularMinimumPrice! - minimumPrice!) / regularMinimumPrice!) *
+              100)
+          .round();
+    }
     if (!hasDiscount) return 0;
     return (((price - specialPrice!) / price) * 100).round();
   }
 
   String get displayPriceLabel {
+    if (_hasRegularPriceDiscount &&
+        (formattedMinimumPrice?.isNotEmpty ?? false)) {
+      return formattedMinimumPrice!;
+    }
     if (specialPrice != null &&
         specialPrice! > 0 &&
         (formattedSpecialPrice?.isNotEmpty ?? false)) {
@@ -302,6 +377,10 @@ class HomeProduct extends Equatable {
   }
 
   String? get originalPriceLabel {
+    if (_hasRegularPriceDiscount &&
+        (formattedRegularMinimumPrice?.isNotEmpty ?? false)) {
+      return formattedRegularMinimumPrice;
+    }
     if (hasDiscount && (formattedPrice?.isNotEmpty ?? false)) {
       return formattedPrice;
     }
@@ -332,11 +411,7 @@ class BannerImage extends Equatable {
   final String link;
   final String? title;
 
-  const BannerImage({
-    required this.imageUrl,
-    this.link = '',
-    this.title,
-  });
+  const BannerImage({required this.imageUrl, this.link = '', this.title});
 
   factory BannerImage.fromJson(Map<String, dynamic> json) {
     return BannerImage(
@@ -346,18 +421,123 @@ class BannerImage extends Equatable {
     );
   }
 
+  /// Category or product slug the banner links to: the last path segment of
+  /// [link], which may be a bare slug (`fashion`) or a full storefront URL.
+  /// Null when the banner has no link.
+  String? get linkSlug => homeLinkSlug(link);
+
   /// Build full URL from relative path
   String fullImageUrl(String baseUrl) {
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return imageUrl;
     }
-    final cleanBase = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
-    final cleanPath = imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
+    final cleanBase = baseUrl.endsWith('/')
+        ? baseUrl.substring(0, baseUrl.length - 1)
+        : baseUrl;
+    final cleanPath = imageUrl.startsWith('/')
+        ? imageUrl.substring(1)
+        : imageUrl;
     return '$cleanBase/$cleanPath';
   }
 
   @override
   List<Object?> get props => [imageUrl, link, title];
+}
+
+/// Category or product slug an admin-configured home link points to: the
+/// last path segment of [link], which may be a bare slug (`fashion`) or a
+/// full storefront URL. Null when there is no usable segment.
+String? homeLinkSlug(String link) {
+  final trimmed = link.trim();
+  if (trimmed.isEmpty) return null;
+  final segments = (Uri.tryParse(trimmed)?.pathSegments ?? [trimmed]).where(
+    (s) => s.isNotEmpty,
+  );
+  return segments.isEmpty ? null : segments.last;
+}
+
+/// One entry of a `services_content` customization (icon, title, text).
+class HomeService extends Equatable {
+  final String title;
+  final String description;
+
+  /// Storefront icon class, e.g. `icon-truck`.
+  final String icon;
+
+  const HomeService({
+    required this.title,
+    required this.description,
+    required this.icon,
+  });
+
+  /// Reads `options['services']`, skipping malformed or untitled entries.
+  static List<HomeService> listFromOptions(Map<String, dynamic> options) {
+    final raw = options['services'] as List? ?? const [];
+    return raw
+        .whereType<Map>()
+        .map(
+          (e) => HomeService(
+            title: e['title']?.toString().trim() ?? '',
+            description: e['description']?.toString().trim() ?? '',
+            icon: e['service_icon']?.toString() ?? '',
+          ),
+        )
+        .where((s) => s.title.isNotEmpty)
+        .toList();
+  }
+
+  @override
+  List<Object?> get props => [title, description, icon];
+}
+
+/// A footer link configured in one of the section's columns.
+class HomeFooterLink extends Equatable {
+  final String title;
+  final String url;
+
+  const HomeFooterLink({required this.title, required this.url});
+
+  static List<List<HomeFooterLink>> columnsFromOptions(
+    Map<String, dynamic> options,
+  ) {
+    return ['column_1', 'column_2'].map((key) {
+      final entries = options[key] as List? ?? const [];
+      return entries
+          .whereType<Map>()
+          .map(
+            (entry) => HomeFooterLink(
+              title: entry['title']?.toString().trim() ?? '',
+              url: entry['url']?.toString().trim() ?? '',
+            ),
+          )
+          .where((link) => link.title.isNotEmpty && link.url.isNotEmpty)
+          .toList();
+    }).toList();
+  }
+
+  String resolveUrl(String publicBaseUrl) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.path.isEmpty) return '';
+    if (uri.hasScheme && uri.scheme != 'http' && uri.scheme != 'https') {
+      return '';
+    }
+
+    final isLocalhost =
+        uri.host == 'localhost' || uri.host == '127.0.0.1' || uri.host == '::1';
+    if (uri.hasScheme && !isLocalhost) return uri.toString();
+
+    final path = uri.path.startsWith('/') ? uri.path.substring(1) : uri.path;
+    return Uri.parse(publicBaseUrl)
+        .resolve(path)
+        .replace(
+          query: uri.hasQuery ? uri.query : null,
+          fragment: uri.hasFragment ? uri.fragment : null,
+        )
+        .toString();
+  }
+
+  @override
+  List<Object?> get props => [title, url];
 }
 
 double _toDouble(dynamic value) {
@@ -372,3 +552,11 @@ int _toInt(dynamic value, [int fallback = 0]) {
   if (value is String) return int.tryParse(value) ?? fallback;
   return fallback;
 }
+
+int? _parseInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value.toString());
+}
+

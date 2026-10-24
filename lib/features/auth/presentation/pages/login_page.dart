@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/widgets/channel_logo.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../bloc/auth_bloc.dart';
 import 'forgot_password_page.dart';
 import 'sign_up_page.dart';
 import '../../../../core/widgets/app_back_button.dart';
+import '../auth_redirect.dart';
 
 /// Login page for existing customers
 /// Figma: authentication flow — login screen
@@ -84,8 +87,8 @@ class _LoginPageState extends State<LoginPage> {
                 backgroundColor: Color(0xFF00A63E),
               ),
             );
-            // Pop back to account page (which will detect logged-in state)
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            // Back to the shell, on the tab the admin configured.
+            navigateAfterAuth(context);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -366,10 +369,13 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildLogo(bool isDark) {
     return Center(
-      child: Image.asset(
-        'assets/images/app_logo_transparent.png',
+      child: ChannelLogo(
         height: 52,
-        fit: BoxFit.contain,
+        fallback: Image.asset(
+          'assets/images/app_logo_transparent.png',
+          height: 52,
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }

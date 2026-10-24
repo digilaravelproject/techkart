@@ -28,6 +28,18 @@ class CheckoutQueries {
     }
   ''';
 
+  /// Account email (used on the order) and suspension status; suspended
+  /// customers may browse but not check out.
+  static const String getCustomerSuspension = r'''
+    query customerSuspension {
+      readCustomerProfile {
+        id
+        email
+        isSuspended
+      }
+    }
+  ''';
+
   /// Get available shipping rates
   static const String getShippingRates = r'''
     query CheckoutShippingRates{
@@ -100,23 +112,6 @@ class CheckoutQueries {
     }
   ''';
 
-  /// Alternative query using country code
-  static const String getCountryStatesByCode = r'''
-    query countryStatesByCode($countryCode: String!, $first: Int) {
-      countryStates(countryCode: $countryCode, first: $first) {
-        edges {
-          node {
-            id
-            _id
-            code
-            defaultName
-            countryId
-            countryCode
-          }
-        }
-      }
-    }
-  ''';
 }
 
 class CheckoutMutations {

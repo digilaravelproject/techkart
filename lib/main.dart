@@ -7,6 +7,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'l10n/app_localizations.dart';
+import 'core/locale/locale_resolution.dart';
 import 'core/channel/channel_bootstrap_service.dart';
 import 'core/graphql/graphql_client.dart';
 import 'core/currency/currency_cubit.dart';
@@ -16,6 +17,8 @@ import 'core/navigation/route_observer.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'core/wishlist/wishlist_cubit.dart';
+import 'core/store_config/store_config_cubit.dart';
+import 'core/store_config/store_config_repository.dart';
 import 'core/notifications/firebase_service.dart';
 import 'core/notifications/fcm_service.dart';
 import 'core/error/error_mapper.dart';
@@ -506,6 +509,11 @@ class BagistoApp extends StatelessWidget {
                     ..add(const LoadHome()),
             ),
             BlocProvider(create: (_) => WishlistCubit()..loadWishlist()),
+            BlocProvider(
+              create: (_) => StoreConfigCubit(
+                repository: StoreConfigRepository(client: clientNotifier.value),
+              )..load(),
+            ),
           ],
           child: const _AppWithAuthCartSync(),
         ),
@@ -605,10 +613,12 @@ class _AppWithAuthCartSyncState extends State<_AppWithAuthCartSync> {
               final homeBloc = context.read<HomeBloc>();
               final categoryBloc = context.read<CategoryBloc>();
               final cartBloc = context.read<CartBloc>();
+              final storeConfigCubit = context.read<StoreConfigCubit>();
               await GraphQLClientProvider.clearCache();
               homeBloc.add(const RefreshHome());
               categoryBloc.add(LoadCategories());
               cartBloc.add(LoadCart());
+              storeConfigCubit.load();
             },
           ),
           BlocListener<CurrencyCubit, String?>(
@@ -618,17 +628,21 @@ class _AppWithAuthCartSyncState extends State<_AppWithAuthCartSync> {
               final homeBloc = context.read<HomeBloc>();
               final categoryBloc = context.read<CategoryBloc>();
               final cartBloc = context.read<CartBloc>();
+              final storeConfigCubit = context.read<StoreConfigCubit>();
               await GraphQLClientProvider.clearCache();
               homeBloc.add(const RefreshHome());
               categoryBloc.add(LoadCategories());
               cartBloc.add(LoadCart());
+              storeConfigCubit.load();
             },
           ),
         ],
         child: BlocBuilder<ThemeCubit, ThemeMode>(
           builder: (context, themeMode) => BlocBuilder<LocaleCubit, Locale?>(
             builder: (context, locale) {
-              ErrorMapper.updateLocale(locale);
+              ErrorMapper.updateLocale(
+                resolveAppLocale(locale, AppLocalizations.supportedLocales),
+              );
               return MaterialApp(
                 onGenerateTitle: (context) =>
                     AppLocalizations.of(context)!.appTitle,
@@ -645,6 +659,8 @@ class _AppWithAuthCartSyncState extends State<_AppWithAuthCartSync> {
                   GlobalCupertinoLocalizations.delegate,
                 ],
                 supportedLocales: AppLocalizations.supportedLocales,
+                localeResolutionCallback: (deviceLocale, supported) =>
+                    resolveAppLocale(locale ?? deviceLocale, supported),
                 builder: (context, child) {
                   // Force the app's own typography scale — ignore the device's
                   // system font-size / Dynamic Type setting so layouts stay

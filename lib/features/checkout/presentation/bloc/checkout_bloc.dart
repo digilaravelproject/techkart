@@ -198,6 +198,9 @@ class CheckoutState extends Equatable {
   final String? successMessage;
   final bool isLoading;
   final bool isPlacingOrder;
+
+  /// The logged-in customer is suspended: browsing only, no checkout.
+  final bool isAccountSuspended;
   final CheckoutOrderResponse? orderResponse;
   final String? paymentGatewayUrl;
   final bool triggerRazorpay;
@@ -229,6 +232,7 @@ class CheckoutState extends Equatable {
     this.successMessage,
     this.isLoading = false,
     this.isPlacingOrder = false,
+    this.isAccountSuspended = false,
     this.orderResponse,
     this.paymentGatewayUrl,
     this.triggerRazorpay = false,
@@ -244,7 +248,8 @@ class CheckoutState extends Equatable {
       addressConfirmed &&
       (isVirtualOnly || selectedShippingMethod != null) &&
       selectedPaymentMethod != null &&
-      !isPlacingOrder;
+      !isPlacingOrder &&
+      !isAccountSuspended;
 
   CheckoutState copyWith({
     CheckoutStatus? status,
@@ -266,6 +271,7 @@ class CheckoutState extends Equatable {
     String? successMessage,
     bool? isLoading,
     bool? isPlacingOrder,
+    bool? isAccountSuspended,
     CheckoutOrderResponse? orderResponse,
     String? paymentGatewayUrl,
     bool? triggerRazorpay,
@@ -313,6 +319,7 @@ class CheckoutState extends Equatable {
           : (successMessage ?? this.successMessage),
       isLoading: isLoading ?? this.isLoading,
       isPlacingOrder: isPlacingOrder ?? this.isPlacingOrder,
+      isAccountSuspended: isAccountSuspended ?? this.isAccountSuspended,
       orderResponse: orderResponse ?? this.orderResponse,
       paymentGatewayUrl: clearPaymentGatewayUrl
           ? null
@@ -350,6 +357,7 @@ class CheckoutState extends Equatable {
     successMessage,
     isLoading,
     isPlacingOrder,
+    isAccountSuspended,
     orderResponse,
     paymentGatewayUrl,
     triggerRazorpay,
@@ -468,6 +476,22 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       // Fetch countries for the address form dropdowns
       add(FetchCountries());
       return;
+    }
+
+    // Suspended customers may browse the store but not check out.
+    try {
+      if (await repository.isCustomerSuspended()) {
+        emit(
+          state.copyWith(
+            isLoading: false,
+            isAccountSuspended: true,
+            status: CheckoutStatus.initial,
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint('[CheckoutBloc] suspension check failed: $e');
     }
 
     // Logged-in user: fetch saved addresses
@@ -1175,10 +1199,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
 
       final selectedBillingAddress =
           state.selectedAddress ??
-          buildCheckoutAddressFromInput(
-            input: event.input,
-            prefix: 'billing',
-          );
+          buildCheckoutAddressFromInput(input: event.input, prefix: 'billing');
       final useSameAddressForShipping = event.input['useForShipping'] == true;
       final selectedShippingAddress = useSameAddressForShipping
           ? null
@@ -1232,6 +1253,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
           );
         }
       } else {
+        var rates = const <ShippingRate>[];
         try {
           // Parallel fetch shipping rates & payment methods
           final results = await Future.wait([
@@ -1272,6 +1294,12 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
           debugPrint('[CheckoutBloc] getShippingRates/PaymentMethods error: $e');
           emit(
             state.copyWith(
+              // Keep fetched rates so the customer can pick one manually
+              // when auto-selecting the first method fails.
+              shippingRates: rates.isEmpty ? null : rates,
+              status: rates.isEmpty
+                  ? null
+                  : CheckoutStatus.shippingRatesFetched,
               isLoading: false,
               errorMessage: ErrorMapper.getUserMessage(
                 e,
@@ -1387,6 +1415,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     PlaceOrder event,
     Emitter<CheckoutState> emit,
   ) async {
+    if (state.isAccountSuspended) return;
     // Validate all steps are complete
     if (!state.addressConfirmed) {
       emit(state.copyWith(errorMessage: 'Please save your address first'));
@@ -1677,8 +1706,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
     if (state.addressConfirmed &&
         state.selectedAddress != null &&
         state.addresses.isNotEmpty) {
-      final shippingAddress =
-          nextUseSameAddress
+      final shippingAddress = nextUseSameAddress
           ? null
           : state.selectedShippingAddress ??
                 (state.addresses.length > 1
@@ -1695,11 +1723,7 @@ class CheckoutBloc extends Bloc<CheckoutEvent, CheckoutState> {
       return;
     }
 
-    emit(
-      state.copyWith(
-        useSameAddressForShipping: nextUseSameAddress,
-      ),
-    );
+    emit(state.copyWith(useSameAddressForShipping: nextUseSameAddress));
   }
 
   void _onResetAddressConfirmation(

@@ -95,8 +95,23 @@ class ProductModel {
     this.customizableOptions = const [],
   });
 
+  /// Whether the API reports a lower final price than the regular one
+  /// (`minimumPrice` below `regularMinimumPrice`). Covers special prices,
+  /// catalog rules and configurable/bundle products.
+  bool get _hasRegularPriceDiscount =>
+      regularMinimumPrice != null &&
+      minimumPrice != null &&
+      minimumPrice! > 0 &&
+      minimumPrice! < regularMinimumPrice!;
+
   /// Calculate discount percentage
   int? get discountPercent {
+    if (_hasRegularPriceDiscount) {
+      final discount =
+          ((regularMinimumPrice! - minimumPrice!) / regularMinimumPrice! * 100)
+              .round();
+      return discount > 0 ? discount : null;
+    }
     if (specialPrice != null &&
         specialPrice! > 0 &&
         price != null &&
@@ -133,6 +148,7 @@ class ProductModel {
 
   /// Get original price (for strikethrough) — only if there's a real discount
   double? get originalPrice {
+    if (_hasRegularPriceDiscount) return regularMinimumPrice;
     if (specialPrice != null &&
         specialPrice! > 0 &&
         price != null &&
@@ -144,6 +160,10 @@ class ProductModel {
 
   String? get formattedOriginalPrice {
     if (originalPrice == null) return null;
+    if (_hasRegularPriceDiscount &&
+        (formattedRegularMinimumPrice?.isNotEmpty ?? false)) {
+      return formattedRegularMinimumPrice;
+    }
     if (formattedPrice?.isNotEmpty ?? false) {
       return formattedPrice;
     }
@@ -462,7 +482,7 @@ class ProductModel {
 
     return ProductModel(
       id: json['id']?.toString() ?? '',
-      numericId: json['_id'] as int?,
+      numericId: _parseInt(json['_id']),
       qty: _parseInt(json['qty']),
       sku: json['sku'] as String?,
       type: json['type'] as String?,
@@ -980,6 +1000,9 @@ class BookingProductData {
   final int qty;
   final String? location;
   final bool showLocation;
+
+  /// Whether a booked slot can be canceled; null when the API omits it.
+  final bool? allowCancellation;
   final String? availableFrom;
   final String? availableTo;
   final BookingSlotData? defaultSlot;
@@ -995,6 +1018,7 @@ class BookingProductData {
     this.qty = 1,
     this.location,
     this.showLocation = false,
+    this.allowCancellation,
     this.availableFrom,
     this.availableTo,
     this.defaultSlot,
@@ -1012,6 +1036,7 @@ class BookingProductData {
       qty: ProductModel._parseInt(json['qty']) ?? 1,
       location: json['location']?.toString(),
       showLocation: ProductModel._parseBool(json['showLocation']) ?? false,
+      allowCancellation: ProductModel._parseBool(json['allowCancellation']),
       availableFrom: json['availableFrom']?.toString(),
       availableTo: json['availableTo']?.toString(),
       defaultSlot: BookingSlotData.fromDynamic(json['defaultSlot']),
@@ -1036,6 +1061,59 @@ class BookingProductData {
         return null;
     }
   }
+
+  /// Weekdays that have booking slots, in Bagisto's numbering
+  /// (0 = Sunday … 6 = Saturday). Null when every day in the availability
+  /// window can be booked, or the slot data is not understood.
+  Set<int>? get bookableWeekdays {
+    final slot = activeSlot;
+    if (slot == null) return null;
+    final raw = BookingSlotData.decodeSlots(slot.slots);
+
+    // Per-day slots: {"0": [...], "1": [...], ...}.
+    if (raw is Map) {
+      return {
+        for (final entry in raw.entries)
+          if (entry.value is List && (entry.value as List).isNotEmpty)
+            ?int.tryParse('${entry.key}'),
+      };
+    }
+
+    if (raw is! List) return null;
+
+    // Per-day slots as a list indexed by weekday: [[...], [], ...].
+    if (raw.isNotEmpty && raw.every((day) => day is List)) {
+      return {
+        for (var day = 0; day < raw.length && day < 7; day++)
+          if ((raw[day] as List).isNotEmpty) day,
+      };
+    }
+
+    // Default "one" booking: ranges from from_day to to_day.
+    final ranges = raw.whereType<Map>().where(
+      (s) => s['from_day'] != null && s['to_day'] != null,
+    );
+    if (ranges.isNotEmpty) {
+      final days = <int>{};
+      for (final range in ranges) {
+        final from = int.tryParse('${range['from_day']}');
+        final to = int.tryParse('${range['to_day']}');
+        if (from == null || to == null) continue;
+        for (var day = from; ; day = (day + 1) % 7) {
+          days.add(day);
+          if (day == to || days.length == 7) break;
+        }
+      }
+      return days;
+    }
+
+    // Same slots every day.
+    return raw.isEmpty ? <int>{} : null;
+  }
+
+  /// Whether [date]'s weekday has booking slots.
+  bool isBookableOn(DateTime date) =>
+      bookableWeekdays?.contains(date.weekday % 7) ?? true;
 }
 
 class BookingSlotData {
@@ -1076,6 +1154,19 @@ class BookingSlotData {
       hourlyPrice: ProductModel._parseDouble(json['hourlyPrice']),
       slots: json['slots'],
     );
+  }
+
+  /// Slot JSON arrives as a string or already decoded; returns the decoded
+  /// value, or null when it cannot be read.
+  static dynamic decodeSlots(dynamic source) {
+    if (source is String) {
+      try {
+        return jsonDecode(source);
+      } catch (_) {
+        return null;
+      }
+    }
+    return source;
   }
 
   static BookingSlotData? fromDynamic(dynamic value) {
@@ -1344,7 +1435,7 @@ class ProductVariant {
 
     return ProductVariant(
       id: json['id']?.toString() ?? '',
-      numericId: json['_id'] as int?,
+      numericId: ProductModel._parseInt(json['_id']),
       sku: json['sku'] as String?,
       name: json['name'] as String?,
       price: ProductModel._parseDouble(json['price']),
@@ -1476,7 +1567,7 @@ class ProductImage {
   factory ProductImage.fromJson(Map<String, dynamic> json) {
     return ProductImage(
       id: json['id']?.toString() ?? '',
-      numericId: json['_id'] as int?,
+      numericId: ProductModel._parseInt(json['_id']),
       type: json['type'] as String?,
       path: json['path'] as String? ?? '',
       publicPath: json['publicPath'] as String?,
@@ -1504,7 +1595,7 @@ class SuperAttribute {
   factory SuperAttribute.fromJson(Map<String, dynamic> json) {
     return SuperAttribute(
       id: json['id']?.toString() ?? '',
-      numericId: json['_id'] as int?,
+      numericId: ProductModel._parseInt(json['_id']),
       code: json['code'] as String?,
       adminName: json['adminName'] as String?,
       options: _parseOptions(json['options']),
@@ -1547,7 +1638,7 @@ class AttributeOption {
     }
     return AttributeOption(
       id: json['id']?.toString() ?? '',
-      numericId: json['_id'] as int?,
+      numericId: ProductModel._parseInt(json['_id']),
       adminName: json['adminName'] as String?,
       swatchValue: json['swatchValue'] as String?,
       swatchValueUrl: json['swatchValueUrl'] as String?,
@@ -1718,7 +1809,7 @@ class DownloadableLink {
 
     return DownloadableLink(
       id: json['id']?.toString() ?? '',
-      numericId: json['_id'] as int?,
+      numericId: ProductModel._parseInt(json['_id']),
       type: json['type'] as String?,
       price: ProductModel._parseDouble(json['price']),
       formattedPrice: json['formattedPrice'] as String?,
@@ -1764,7 +1855,7 @@ class DownloadableSample {
 
     return DownloadableSample(
       id: json['id']?.toString() ?? '',
-      numericId: json['_id'] as int?,
+      numericId: ProductModel._parseInt(json['_id']),
       type: json['type'] as String?,
       fileUrl: json['fileUrl'] as String?,
       sortOrder: json['sortOrder'] as int?,

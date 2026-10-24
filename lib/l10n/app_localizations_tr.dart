@@ -1886,4 +1886,117 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get accountReviewVideoLoadFailed => 'Bu video oynatılamıyor';
+
+  @override
+  String accountShippedCount(int count) {
+    return '$count gönderildi';
+  }
+
+  @override
+  String get accountReturnNoEligibleOrders =>
+      'Şu anda iade için uygun sipariş yok';
+
+  @override
+  String get accountRequestReturn => 'İade talep et';
+
+  @override
+  String get accountRefunded => 'İade edildi';
+
+  @override
+  String get accountCanceledQty => 'İptal edildi';
+
+  @override
+  String get productBookingCancellation => 'İptal';
+
+  @override
+  String get productBookingCancellationNotAllowed => 'İptale izin verilmez';
+
+  @override
+  String get accountBookingItemsNotCanceled =>
+      'Bu siparişteki rezervasyon ürünleri iptal edilmeyecek.';
+
+  @override
+  String cartQtyValue(int count) {
+    return 'Adet: $count';
+  }
+
+  @override
+  String get checkoutAccountSuspended =>
+      'Hesabınız askıya alındı. Mağazaya göz atabilirsiniz ancak sipariş veremezsiniz.';
+
+  @override
+  String get accountGenderRequiredLabel => 'Cinsiyet *';
+
+  @override
+  String get accountGenderRequired => 'Cinsiyet gerekli';
+
+  @override
+  String get accountPhoneRequiredLabel => 'Telefon *';
+
+  @override
+  String get cartGuestCheckoutNotAllowed =>
+      'Bu ürünleri satın almak için lütfen giriş yapın.';
+
+  @override
+  String get accountEuWithdraw => 'Sözleşmeden cayma';
+
+  @override
+  String get accountEuWithdrawReason => 'Neden (isteğe bağlı)';
+
+  @override
+  String get accountEuWithdrawSubmit => 'Cayma talebini gönder';
+
+  @override
+  String get accountEuWithdrawSubmitted => 'Cayma talebiniz alındı.';
+
+  @override
+  String accountEuWithdrawStatus(String status) {
+    return 'Cayma talebi: $status';
+  }
+
+  @override
+  String get accountEuWithdrawGuestDescription =>
+      'Sözleşmeden caymak için sipariş numarasını ve siparişte kullanılan e-postayı girin.';
+
+  @override
+  String get accountEuWithdrawOrderNumber => 'Sipariş numarası *';
+
+  @override
+  String get accountEuWithdrawEmail => 'Sipariş e-postası *';
+
+  @override
+  String get accountEuWithdrawFieldRequired => 'Bu alan zorunludur';
+
+  @override
+  String get accountRefunds => 'İadeler';
+
+  @override
+  String get accountShippingAndHandling => 'Kargo ve işlem';
+
+  @override
+  String get accountContactUsDescription =>
+      'Bize bir not bırakın, en kısa sürede size dönelim';
+
+  @override
+  String get accountPhoneNumber => 'Telefon numarası';
+
+  @override
+  String get accountWhatsOnYourMind => 'Aklınızda ne var?';
+
+  @override
+  String get accountDescribeHere => 'Buraya yazın';
+
+  @override
+  String get accountSubmit => 'Gönder';
+
+  @override
+  String cartMinimumOrderAmount(String amount) {
+    return 'Minimum sipariş tutarı $amount';
+  }
+
+  @override
+  String get accountPrice => 'Fiyat';
+
+  @override
+  String get accountQty => 'Adet';
 }

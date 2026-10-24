@@ -1889,4 +1889,117 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get accountReviewVideoLoadFailed =>
       'Не удалось воспроизвести это видео';
+
+  @override
+  String accountShippedCount(int count) {
+    return 'Отправлено: $count';
+  }
+
+  @override
+  String get accountReturnNoEligibleOrders =>
+      'Сейчас нет заказов, доступных для возврата';
+
+  @override
+  String get accountRequestReturn => 'Запросить возврат';
+
+  @override
+  String get accountRefunded => 'Возвращено';
+
+  @override
+  String get accountCanceledQty => 'Отменено';
+
+  @override
+  String get productBookingCancellation => 'Отмена';
+
+  @override
+  String get productBookingCancellationNotAllowed => 'Отмена не допускается';
+
+  @override
+  String get accountBookingItemsNotCanceled =>
+      'Бронирования в этом заказе не будут отменены.';
+
+  @override
+  String cartQtyValue(int count) {
+    return 'Кол-во: $count';
+  }
+
+  @override
+  String get checkoutAccountSuspended =>
+      'Ваш аккаунт заблокирован. Вы можете просматривать магазин, но не можете оформлять заказы.';
+
+  @override
+  String get accountGenderRequiredLabel => 'Пол *';
+
+  @override
+  String get accountGenderRequired => 'Укажите пол';
+
+  @override
+  String get accountPhoneRequiredLabel => 'Телефон *';
+
+  @override
+  String get cartGuestCheckoutNotAllowed =>
+      'Войдите, чтобы оформить заказ на эти товары.';
+
+  @override
+  String get accountEuWithdraw => 'Отказаться от договора';
+
+  @override
+  String get accountEuWithdrawReason => 'Причина (необязательно)';
+
+  @override
+  String get accountEuWithdrawSubmit => 'Отправить отказ';
+
+  @override
+  String get accountEuWithdrawSubmitted => 'Ваш запрос на отказ получен.';
+
+  @override
+  String accountEuWithdrawStatus(String status) {
+    return 'Запрос на отказ: $status';
+  }
+
+  @override
+  String get accountEuWithdrawGuestDescription =>
+      'Введите номер заказа и email, указанный в заказе, чтобы отказаться от договора.';
+
+  @override
+  String get accountEuWithdrawOrderNumber => 'Номер заказа *';
+
+  @override
+  String get accountEuWithdrawEmail => 'Email заказа *';
+
+  @override
+  String get accountEuWithdrawFieldRequired => 'Обязательное поле';
+
+  @override
+  String get accountRefunds => 'Возвраты';
+
+  @override
+  String get accountShippingAndHandling => 'Доставка и обработка';
+
+  @override
+  String get accountContactUsDescription =>
+      'Напишите нам, и мы ответим как можно скорее';
+
+  @override
+  String get accountPhoneNumber => 'Номер телефона';
+
+  @override
+  String get accountWhatsOnYourMind => 'Что вы хотите сообщить?';
+
+  @override
+  String get accountDescribeHere => 'Опишите здесь';
+
+  @override
+  String get accountSubmit => 'Отправить';
+
+  @override
+  String cartMinimumOrderAmount(String amount) {
+    return 'Минимальная сумма заказа: $amount';
+  }
+
+  @override
+  String get accountPrice => 'Цена';
+
+  @override
+  String get accountQty => 'Кол-во';
 }

@@ -1909,4 +1909,118 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get accountReviewVideoLoadFailed =>
       'No se puede reproducir este video';
+
+  @override
+  String accountShippedCount(int count) {
+    return '$count enviado(s)';
+  }
+
+  @override
+  String get accountReturnNoEligibleOrders =>
+      'Ningún pedido es apto para devolución en este momento';
+
+  @override
+  String get accountRequestReturn => 'Solicitar una devolución';
+
+  @override
+  String get accountRefunded => 'Reembolsado';
+
+  @override
+  String get accountCanceledQty => 'Cancelado';
+
+  @override
+  String get productBookingCancellation => 'Cancelación';
+
+  @override
+  String get productBookingCancellationNotAllowed => 'Cancelación no permitida';
+
+  @override
+  String get accountBookingItemsNotCanceled =>
+      'Los artículos de reserva de este pedido no se cancelarán.';
+
+  @override
+  String cartQtyValue(int count) {
+    return 'Cant.: $count';
+  }
+
+  @override
+  String get checkoutAccountSuspended =>
+      'Tu cuenta está suspendida. Puedes navegar por la tienda, pero no puedes realizar pedidos.';
+
+  @override
+  String get accountGenderRequiredLabel => 'Género *';
+
+  @override
+  String get accountGenderRequired => 'El género es obligatorio';
+
+  @override
+  String get accountPhoneRequiredLabel => 'Teléfono *';
+
+  @override
+  String get cartGuestCheckoutNotAllowed =>
+      'Inicia sesión para comprar estos artículos.';
+
+  @override
+  String get accountEuWithdraw => 'Desistir del contrato';
+
+  @override
+  String get accountEuWithdrawReason => 'Motivo (opcional)';
+
+  @override
+  String get accountEuWithdrawSubmit => 'Enviar desistimiento';
+
+  @override
+  String get accountEuWithdrawSubmitted =>
+      'Hemos recibido tu solicitud de desistimiento.';
+
+  @override
+  String accountEuWithdrawStatus(String status) {
+    return 'Solicitud de desistimiento: $status';
+  }
+
+  @override
+  String get accountEuWithdrawGuestDescription =>
+      'Introduce el número de pedido y el correo usado en el pedido para desistir del contrato.';
+
+  @override
+  String get accountEuWithdrawOrderNumber => 'Número de pedido *';
+
+  @override
+  String get accountEuWithdrawEmail => 'Correo del pedido *';
+
+  @override
+  String get accountEuWithdrawFieldRequired => 'Este campo es obligatorio';
+
+  @override
+  String get accountRefunds => 'Reembolsos';
+
+  @override
+  String get accountShippingAndHandling => 'Envío y manipulación';
+
+  @override
+  String get accountContactUsDescription =>
+      'Escríbenos una nota y te responderemos lo antes posible';
+
+  @override
+  String get accountPhoneNumber => 'Número de teléfono';
+
+  @override
+  String get accountWhatsOnYourMind => '¿Qué tienes en mente?';
+
+  @override
+  String get accountDescribeHere => 'Descríbelo aquí';
+
+  @override
+  String get accountSubmit => 'Enviar';
+
+  @override
+  String cartMinimumOrderAmount(String amount) {
+    return 'El importe mínimo del pedido es $amount';
+  }
+
+  @override
+  String get accountPrice => 'Precio';
+
+  @override
+  String get accountQty => 'Cant.';
 }

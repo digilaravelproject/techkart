@@ -3551,6 +3551,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to play this video'**
   String get accountReviewVideoLoadFailed;
+
+  /// No description provided for @accountShippedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Shipped'**
+  String accountShippedCount(int count);
+
+  /// No description provided for @accountReturnNoEligibleOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders are eligible for a return right now'**
+  String get accountReturnNoEligibleOrders;
+
+  /// No description provided for @accountRequestReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a Return'**
+  String get accountRequestReturn;
+
+  /// No description provided for @accountRefunded.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get accountRefunded;
+
+  /// No description provided for @accountCanceledQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Canceled'**
+  String get accountCanceledQty;
+
+  /// No description provided for @productBookingCancellation.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation'**
+  String get productBookingCancellation;
+
+  /// No description provided for @productBookingCancellationNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation Not Allowed'**
+  String get productBookingCancellationNotAllowed;
+
+  /// No description provided for @accountBookingItemsNotCanceled.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking items in this order will not be canceled.'**
+  String get accountBookingItemsNotCanceled;
+
+  /// No description provided for @cartQtyValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty: {count}'**
+  String cartQtyValue(int count);
+
+  /// No description provided for @checkoutAccountSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is suspended. You can browse the store, but you cannot place orders.'**
+  String get checkoutAccountSuspended;
+
+  /// No description provided for @accountGenderRequiredLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender *'**
+  String get accountGenderRequiredLabel;
+
+  /// No description provided for @accountGenderRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender is required'**
+  String get accountGenderRequired;
+
+  /// No description provided for @accountPhoneRequiredLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone *'**
+  String get accountPhoneRequiredLabel;
+
+  /// No description provided for @cartGuestCheckoutNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in to check out these items.'**
+  String get cartGuestCheckoutNotAllowed;
+
+  /// No description provided for @accountEuWithdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw from Contract'**
+  String get accountEuWithdraw;
+
+  /// No description provided for @accountEuWithdrawReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (optional)'**
+  String get accountEuWithdrawReason;
+
+  /// No description provided for @accountEuWithdrawSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Withdrawal'**
+  String get accountEuWithdrawSubmit;
+
+  /// No description provided for @accountEuWithdrawSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your withdrawal request has been received.'**
+  String get accountEuWithdrawSubmitted;
+
+  /// No description provided for @accountEuWithdrawStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawal request: {status}'**
+  String accountEuWithdrawStatus(String status);
+
+  /// No description provided for @accountEuWithdrawGuestDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the order number and the email address used for the order to withdraw from your contract.'**
+  String get accountEuWithdrawGuestDescription;
+
+  /// No description provided for @accountEuWithdrawOrderNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Number *'**
+  String get accountEuWithdrawOrderNumber;
+
+  /// No description provided for @accountEuWithdrawEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Email *'**
+  String get accountEuWithdrawEmail;
+
+  /// No description provided for @accountEuWithdrawFieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get accountEuWithdrawFieldRequired;
+
+  /// No description provided for @accountRefunds.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunds'**
+  String get accountRefunds;
+
+  /// No description provided for @accountShippingAndHandling.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping & Handling'**
+  String get accountShippingAndHandling;
+
+  /// No description provided for @accountContactUsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Jot us a note, and we’ll get back to you as quickly as possible'**
+  String get accountContactUsDescription;
+
+  /// No description provided for @accountPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get accountPhoneNumber;
+
+  /// No description provided for @accountWhatsOnYourMind.
+  ///
+  /// In en, this message translates to:
+  /// **'What’s on your mind?'**
+  String get accountWhatsOnYourMind;
+
+  /// No description provided for @accountDescribeHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe Here'**
+  String get accountDescribeHere;
+
+  /// No description provided for @accountSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get accountSubmit;
+
+  /// No description provided for @cartMinimumOrderAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum order amount is {amount}'**
+  String cartMinimumOrderAmount(String amount);
+
+  /// No description provided for @accountPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get accountPrice;
+
+  /// No description provided for @accountQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get accountQty;
 }
 
 class _AppLocalizationsDelegate

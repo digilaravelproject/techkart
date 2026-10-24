@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -29,6 +31,7 @@ import '../pages/wishlist_page.dart';
 import '../widgets/account_menu_item.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../../../affiliate/presentation/pages/affiliate_dashboard_page.dart';
+import '../../../../core/store_config/store_config.dart';
 
 /// Account Menu Page — Figma node-id=220-6770
 ///
@@ -116,7 +119,15 @@ class _AccountMenuBody extends StatelessWidget {
       initials = 'U';
     }
 
-    return SingleChildScrollView(
+    AccountDashboardBloc? dashboardBloc;
+    try {
+      dashboardBloc = context.read<AccountDashboardBloc>();
+    } catch (_) {
+      // Not in tree — nothing to refresh.
+    }
+
+    final content = SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -138,6 +149,18 @@ class _AccountMenuBody extends StatelessWidget {
           const SizedBox(height: 24),
         ],
       ),
+    );
+
+    if (dashboardBloc == null) return content;
+    final bloc = dashboardBloc;
+    return RefreshIndicator(
+      color: AppColors.primary500,
+      onRefresh: () {
+        final completer = Completer<void>();
+        bloc.add(RefreshAccountDashboard(completer: completer));
+        return completer.future;
+      },
+      child: content,
     );
   }
 
@@ -220,6 +243,7 @@ class _AccountMenuBody extends StatelessWidget {
   /// Figma node: 220:6774
   Widget _buildMenuSection(BuildContext context, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
+    final config = StoreConfig.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -265,19 +289,23 @@ class _AccountMenuBody extends StatelessWidget {
             onTap: () =>
                 _onMenuItemTap(context, AccountMenuAction.downloadableProducts),
           ),
-          const SizedBox(height: 2),
-          AccountMenuItem(
-            label: l10n.accountWishlist,
-            trailingIcon: Icons.chevron_right,
-            onTap: () => _onMenuItemTap(context, AccountMenuAction.wishlist),
-          ),
-          const SizedBox(height: 2),
-          AccountMenuItem(
-            label: l10n.accountCompareProducts,
-            trailingIcon: Icons.chevron_right,
-            onTap: () =>
-                _onMenuItemTap(context, AccountMenuAction.compareProducts),
-          ),
+          if (config.showWishlist) ...[
+            const SizedBox(height: 2),
+            AccountMenuItem(
+              label: l10n.accountWishlist,
+              trailingIcon: Icons.chevron_right,
+              onTap: () => _onMenuItemTap(context, AccountMenuAction.wishlist),
+            ),
+          ],
+          if (config.showCompare) ...[
+            const SizedBox(height: 2),
+            AccountMenuItem(
+              label: l10n.accountCompareProducts,
+              trailingIcon: Icons.chevron_right,
+              onTap: () =>
+                  _onMenuItemTap(context, AccountMenuAction.compareProducts),
+            ),
+          ],
           const SizedBox(height: 2),
           AccountMenuItem(
             label: l10n.accountProductReview,

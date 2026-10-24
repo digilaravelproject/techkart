@@ -47,9 +47,11 @@ class CategoryPage extends StatelessWidget {
           return const CategoryShimmer();
         }
 
-        if (state.status == CategoryStatus.error &&
-            state.categories.isEmpty) {
-          return _buildError(context, state.errorMessage ?? l10n.categoryUnknownError);
+        if (state.status == CategoryStatus.error && state.categories.isEmpty) {
+          return _buildError(
+            context,
+            state.errorMessage ?? l10n.categoryUnknownError,
+          );
         }
 
         return _buildContent(context, state);
@@ -62,14 +64,14 @@ class CategoryPage extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.neutral900 : AppColors.white,
+      backgroundColor: isDark ? AppColors.neutral900 : AppColors.white,
       body: SafeArea(
         child: Column(
           children: [
             // ── Search Bar ──
             CategorySearchBar(
-              categoryName: state.selectedCategory?.name ?? l10n.categoryDefaultName,
+              categoryName:
+                  state.selectedCategory?.name ?? l10n.categoryDefaultName,
               onSearchTap: () {
                 Navigator.push(
                   context,
@@ -110,11 +112,12 @@ class CategoryPage extends StatelessWidget {
                                     const SizedBox(height: 16),
                                     Text(
                                       'No categories found',
-                                      style: AppTextStyles.text4(context).copyWith(
-                                        color: isDark
-                                            ? AppColors.neutral500
-                                            : AppColors.neutral600,
-                                      ),
+                                      style: AppTextStyles.text4(context)
+                                          .copyWith(
+                                            color: isDark
+                                                ? AppColors.neutral500
+                                                : AppColors.neutral600,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -129,9 +132,9 @@ class CategoryPage extends StatelessWidget {
                               categories: state.categories,
                               selectedCategory: state.selectedCategory,
                               onCategorySelected: (cat) {
-                                context
-                                    .read<CategoryBloc>()
-                                    .add(SelectCategory(cat));
+                                context.read<CategoryBloc>().add(
+                                  SelectCategory(cat),
+                                );
                               },
                             ),
 
@@ -142,16 +145,29 @@ class CategoryPage extends StatelessWidget {
                                 state.selectedCategory!.bannerUrl!.isNotEmpty)
                               CategoryBanner(
                                 bannerUrl: state.selectedCategory?.bannerUrl,
-                                title: state.selectedCategory?.name,
                               ),
 
                             if (state.selectedCategory?.bannerUrl != null &&
                                 state.selectedCategory!.bannerUrl!.isNotEmpty)
                               const SizedBox(height: 32),
 
+                            // ── Description configured in admin ──
+                            if (state
+                                    .selectedCategory
+                                    ?.plainDescription
+                                    .isNotEmpty ??
+                                false) ...[
+                              _CategoryDescription(
+                                text: state.selectedCategory!.plainDescription,
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+
                             // ── Sub-category Sections ──
                             ..._buildSubCategorySections(
-                                context, state.subCategories),
+                              context,
+                              state.subCategories,
+                            ),
 
                             if (state.subCategories.isNotEmpty)
                               const SizedBox(height: 24),
@@ -175,7 +191,10 @@ class CategoryPage extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildSubCategorySections(BuildContext context, List<CategoryModel> subCategories) {
+  List<Widget> _buildSubCategorySections(
+    BuildContext context,
+    List<CategoryModel> subCategories,
+  ) {
     if (subCategories.isEmpty) return [];
 
     final l10n = AppLocalizations.of(context)!;
@@ -225,6 +244,31 @@ class CategoryPage extends StatelessWidget {
               child: Text(l10n.commonRetry),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Plain-text category description shown under the chips/banner.
+class _CategoryDescription extends StatelessWidget {
+  final String text;
+
+  const _CategoryDescription({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      key: const ValueKey('category_description'),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontFamily: 'Roboto',
+          fontSize: 14,
+          height: 1.5,
+          color: isDark ? AppColors.neutral300 : AppColors.neutral700,
         ),
       ),
     );

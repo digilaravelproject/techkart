@@ -1,6 +1,4 @@
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/locale/locale_cubit.dart';
 import '../../../../core/graphql/queries.dart';
 import '../../../category/data/models/category_model.dart';
 import '../models/home_models.dart';
@@ -8,7 +6,7 @@ import '../models/home_models.dart';
 /// Repository that fetches all data needed for the homepage.
 ///
 /// Uses:
-///   • `ThemeQueries.getThemeCustomization` → homepage section layout
+///   • `SectionQueries.getSections` → homepage section layout
 ///   • `CategoryQueries.getHomeCategories` → category carousel
 ///   • `ProductQueries.getProducts` → product carousels (Featured, Hot Deals, New, etc.)
 class HomeRepository {
@@ -16,27 +14,23 @@ class HomeRepository {
 
   HomeRepository({required GraphQLClient client}) : _client = client;
 
-  /// Fetches the theme customization entries that define homepage sections.
+  /// Fetches published sections for the active channel theme.
   Future<List<ThemeCustomization>> fetchThemeCustomizations() =>
-      fetchsections();
+      fetchSections();
 
-  Future<List<ThemeCustomization>> fetchsections() async {
-    // Read the user's preferred locale for selecting the right translation
-    final prefs = await SharedPreferences.getInstance();
-    final locale = prefs.getString(LocaleCubit.localeKey) ?? 'en';
-
+  Future<List<ThemeCustomization>> fetchSections() async {
     final result = await _client.query(
       QueryOptions(
-        document: gql(ThemeQueries.getThemeCustomization),
+        document: gql(SectionQueries.getSections),
         variables: const {'first': 50},
-        fetchPolicy: FetchPolicy.cacheAndNetwork,
+        // Admin edits must show on the next load; cache-and-network would
+        // hand back the previous response first.
+        fetchPolicy: FetchPolicy.networkOnly,
       ),
     );
 
     if (result.hasException) {
-      throw Exception(
-        'Failed to load theme customizations: ${result.exception}',
-      );
+      throw Exception('Failed to load homepage sections: ${result.exception}');
     }
 
     final rawSections =
@@ -44,22 +38,26 @@ class HomeRepository {
     final edges = rawSections?['edges'] as List? ?? [];
     return edges
         .map(
-          (e) => ThemeCustomization.fromJson(
-            e['node'] as Map<String, dynamic>,
-            preferredLocale: locale,
-          ),
+          (e) => ThemeCustomization.fromJson(e['node'] as Map<String, dynamic>),
         )
         .where((tc) => tc.status)
         .toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
   }
 
-  /// Fetches categories for the horizontal category carousel.
-  Future<List<HomeCategory>> fetchHomeCategories() async {
+  /// Fetches categories for a category carousel: every active category, or
+  /// only the direct children of [parentId] when the carousel sets a
+  /// `parent_id` filter, sorted by position and capped at [limit]. Matches
+  /// the storefront's `/api/categories` call.
+  Future<List<HomeCategory>> fetchHomeCategories({
+    int? parentId,
+    int? limit,
+  }) async {
     final result = await _client.query(
       QueryOptions(
         document: gql(CategoryQueries.getHomeCategories),
-        fetchPolicy: FetchPolicy.cacheAndNetwork,
+        variables: const {'first': 100},
+        fetchPolicy: FetchPolicy.networkOnly,
       ),
     );
 
@@ -68,13 +66,42 @@ class HomeRepository {
     }
 
     final edges = result.data?['categories']?['edges'] as List? ?? [];
-    // The `categories` query also returns categories disabled in admin.
-    return edges
-        .where((e) => CategoryModel.isActiveStatus(e['node']?['status']))
-        .map((e) => HomeCategory.fromJson(e['node'] as Map<String, dynamic>))
-        .where((c) => c.numericId != 1) // exclude root category
-        .toList()
-      ..sort((a, b) => a.position.compareTo(b.position));
+    // The `categories` query also returns disabled and nested categories.
+    final activeNodes = edges
+        .map((e) => e['node'])
+        .whereType<Map<String, dynamic>>()
+        .where((node) => CategoryModel.isActiveStatus(node['status']))
+        .toList();
+    // Ids that are the parent of an active category.
+    final parentIds = {
+      for (final node in activeNodes)
+        ?int.tryParse('${(node['parent'] as Map?)?['_id']}'),
+    };
+    final categories =
+        activeNodes
+            .where((node) {
+              if (parentId == null) return true;
+              final parent = node['parent'] as Map<String, dynamic>?;
+              return int.tryParse('${parent?['_id']}') == parentId;
+            })
+            .map(
+              (node) => HomeCategory.fromJson(
+                node,
+                hasChildren: parentIds.contains(
+                  int.tryParse('${node['_id']}'),
+                ),
+              ),
+            )
+            .toList()
+          ..sort((a, b) {
+            final byPosition = a.position.compareTo(b.position);
+            return byPosition != 0
+                ? byPosition
+                : (a.numericId ?? 0).compareTo(b.numericId ?? 0);
+          });
+    return limit != null && limit > 0
+        ? categories.take(limit).toList()
+        : categories;
   }
 
   /// Fetches products with optional filter JSON and sorting.
@@ -97,7 +124,7 @@ class HomeRepository {
           'reverse': reverse,
           if (filter != null) 'filter': filter,
         },
-        fetchPolicy: FetchPolicy.cacheAndNetwork,
+        fetchPolicy: FetchPolicy.networkOnly,
       ),
     );
 

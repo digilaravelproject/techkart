@@ -5,6 +5,11 @@ import 'package:beenzo/features/category/data/models/category_model.dart';
 import 'package:beenzo/features/category/data/models/product_model.dart';
 import 'package:beenzo/features/category/data/repository/category_repository.dart';
 import 'package:beenzo/features/category/presentation/bloc/category_bloc.dart';
+import 'package:beenzo/features/category/presentation/pages/category_page.dart';
+import 'package:beenzo/features/category/presentation/widgets/category_banner.dart';
+import 'package:beenzo/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -15,6 +20,7 @@ Map<String, dynamic> _translation(int id, String name) => {
   'id': '/api/shop/category-translations/$id',
   'name': name,
   'slug': name.toLowerCase().replaceAll(' ', '-'),
+  'description': null,
   'urlPath': '',
 };
 
@@ -129,6 +135,7 @@ class _FakeRepository extends CategoryRepository {
     CategoryModel(
       id: '/api/shop/categories/2',
       numericId: 2,
+      bannerUrl: 'https://example.com/men.webp',
       translation: CategoryTranslation(name: 'Men'),
       children: [
         CategoryModel(
@@ -164,14 +171,18 @@ class _FakeRepository extends CategoryRepository {
 }
 
 void main() {
-  test('category tab query uses the categories API with parent and children', () {
-    final query = CategoryQueries.getCategoryTabCategories;
-    expect(query, contains('categories('));
-    expect(query, isNot(contains('treeCategories')));
-    for (final field in ['parent', 'children', 'status', 'pageInfo']) {
-      expect(query, contains(field));
-    }
-  });
+  descriptionTests();
+  test(
+    'category tab query uses the categories API with parent and children',
+    () {
+      final query = CategoryQueries.getCategoryTabCategories;
+      expect(query, contains('categories('));
+      expect(query, isNot(contains('treeCategories')));
+      for (final field in ['parent', 'children', 'status', 'pageInfo']) {
+        expect(query, contains(field));
+      }
+    },
+  );
 
   test(
     'tab shows top-level active categories except Root, sorted by position',
@@ -216,5 +227,60 @@ void main() {
     expect(loaded.subCategories.map((c) => c.name), ['Winter Wear']);
     expect(repository.treeCalled, isFalse);
     await bloc.close();
+  });
+
+  testWidgets('category name is absent from the category banner', (
+    tester,
+  ) async {
+    final bloc = CategoryBloc(repository: _FakeRepository());
+    bloc.add(LoadCategories());
+    await bloc.stream.firstWhere(
+      (state) => state.status == CategoryStatus.loaded,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: BlocProvider.value(value: bloc, child: const CategoryPage()),
+      ),
+    );
+
+    final banner = find.byType(CategoryBanner);
+    expect(banner, findsOneWidget);
+    expect(
+      find.descendant(of: banner, matching: find.text('Men')),
+      findsNothing,
+    );
+  });
+}
+
+void descriptionTests() {
+  test('categories tab query requests the description', () {
+    expect(
+      CategoryQueries.getCategoryTabCategories,
+      matches(RegExp(r'translation \{[^}]*description', dotAll: true)),
+    );
+  });
+
+  test('plainDescription strips html and entities', () {
+    final category = CategoryModel.fromTreeJson({
+      'id': '/api/shop/categories/8',
+      '_id': 8,
+      'translation': {
+        'name': 'Electronics',
+        'description':
+            '<p>Discover <b>cutting-edge</b>&nbsp;gear &amp; more</p>\n<p></p>',
+      },
+    });
+
+    expect(category.plainDescription, 'Discover cutting-edge gear & more');
+    expect(
+      CategoryModel.fromTreeJson({
+        'id': 'x',
+        'translation': {'description': '<p> </p>'},
+      }).plainDescription,
+      isEmpty,
+    );
   });
 }

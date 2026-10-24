@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../core/widgets/channel_logo.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -262,10 +264,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   Widget _buildLogo(bool isDark) {
     return Center(
-      child: Image.asset(
-        'assets/images/app_logo_transparent.png',
+      child: ChannelLogo(
         height: 52,
-        fit: BoxFit.contain,
+        fallback: Image.asset(
+          'assets/images/app_logo_transparent.png',
+          height: 52,
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }

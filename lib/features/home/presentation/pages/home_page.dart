@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/widgets/channel_logo.dart';
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -11,15 +13,20 @@ import '../../data/models/home_models.dart';
 import '../../../product/presentation/pages/product_detail_page.dart';
 import '../../../category/presentation/pages/category_products_grid_page.dart';
 import '../../../category/data/repository/category_repository.dart';
+import '../../../category/presentation/bloc/category_bloc.dart';
 import '../../../cart/presentation/bloc/cart_bloc.dart';
 import '../../../search/presentation/pages/search_page.dart';
 import '../bloc/home_bloc.dart';
 import '../widgets/category_carousel.dart';
+import '../widgets/footer_links_section.dart';
 import '../widgets/image_carousel.dart';
 import '../widgets/product_card_large.dart';
 import '../widgets/recently_viewed_products_section.dart';
 import '../widgets/section_header.dart';
+import '../widgets/services_content_section.dart';
 import '../widgets/static_content_widget.dart';
+import '../../../../core/store_config/store_config_cubit.dart';
+import '../home_refresh.dart';
 
 /// The main Home page of the Bagisto Flutter app.
 ///
@@ -97,22 +104,100 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  /// Navigate to Category Products grid for a given [HomeCategory].
+  /// Open a home category: one with sub-categories opens in the Categories
+  /// tab; one without opens its product catalog.
   void _openCategoryProducts(BuildContext context, HomeCategory category) {
     final categoryId = category.numericId ?? 0;
     if (categoryId <= 0) return;
+    if (category.hasChildren && AppNavigator.maybeOf(context) != null) {
+      context.read<CategoryBloc>().add(ShowCategory(categoryId));
+      AppNavigator.goCategories(context);
+      return;
+    }
+    _openCategoryGrid(context, categoryId, category.name, category.slug);
+  }
+
+  void _openCategoryGrid(
+    BuildContext context,
+    int categoryId,
+    String name,
+    String slug,
+  ) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => RepositoryProvider.value(
           value: RepositoryProvider.of<CategoryRepository>(context),
           child: CategoryProductsGridPage(
             categoryId: categoryId,
-            categoryName: category.name,
-            categorySlug: category.slug,
+            categoryName: name,
+            categorySlug: slug,
           ),
         ),
       ),
     );
+  }
+
+  /// Follow an admin-configured home link (banner, collection, button).
+  /// The link's last path segment is matched against category slugs; a
+  /// top-level category opens in the Categories tab, a sub-category in its
+  /// products grid, and anything else is treated as a product URL key.
+  Future<void> _openLink(BuildContext context, String link) async {
+    final slug = homeLinkSlug(link);
+    if (slug == null) return;
+
+    final homeCategory = context
+        .read<HomeBloc>()
+        .state
+        .categories
+        .where((c) => c.slug == slug)
+        .firstOrNull;
+    if (homeCategory != null) {
+      _openCategoryProducts(context, homeCategory);
+      return;
+    }
+
+    final repository = RepositoryProvider.of<CategoryRepository>(context);
+    try {
+      final categories = await repository.getCategoryTabCategories();
+      if (!context.mounted) return;
+      for (final top in categories) {
+        final topId = top.numericId ?? 0;
+        if (top.slug == slug && topId > 0) {
+          _openCategoryProducts(
+            context,
+            HomeCategory(
+              id: top.id,
+              numericId: topId,
+              name: top.name,
+              slug: top.slug,
+              position: top.position ?? 0,
+              hasChildren: top.children.isNotEmpty,
+            ),
+          );
+          return;
+        }
+        for (final child in top.children) {
+          final childId = child.numericId ?? 0;
+          if (child.slug == slug && childId > 0) {
+            _openCategoryGrid(context, childId, child.name, child.slug);
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[HomePage] link category lookup failed: $e');
+    }
+    if (!context.mounted) return;
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => ProductDetailPage(urlKey: slug)));
+  }
+
+  Future<void> _openFooterLink(HomeFooterLink link) async {
+    final uri = Uri.tryParse(link.resolveUrl(bagistoPublicBaseUrl));
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   /// Quick-add a product to cart (for simple products only).
@@ -318,11 +403,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // BENZOO logo
-                    Image.asset(
-                      'assets/images/app_logo_transparent.png',
+                    // Channel logo from admin, else Beenzo logo
+                    ChannelLogo(
                       height: 26,
-                      fit: BoxFit.contain,
+                      fallback: Image.asset(
+                        'assets/images/app_logo_transparent.png',
+                        height: 26,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                     ),
                     // Search icon
                     GestureDetector(
@@ -423,6 +512,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     // ── Build sections dynamically based on sortOrder from API ──
     // The API returns sections in sortOrder, so we render them in that order
     final List<Widget> sections = [];
+    final List<Widget> footerSections = [];
 
     // Process each customization in sortOrder
     for (final tc in state.customizations) {
@@ -438,17 +528,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               .where((b) => b.imageUrl.isNotEmpty)
               .toList();
           if (bannerImages.isNotEmpty) {
-            sections.add(ImageCarousel(images: bannerImages));
+            sections.add(
+              ImageCarousel(
+                images: bannerImages,
+                onBannerTap: (banner) => _openLink(context, banner.link),
+              ),
+            );
           }
           break;
 
         case 'product_carousel':
           final products = state.productSections[tc.id] ?? [];
           if (products.isNotEmpty) {
-            final filters =
-                tc.options['filters'] as Map<String, dynamic>? ?? {};
-            final title = tc.name.isNotEmpty
-                ? tc.name
+            final filters = tc.filters;
+            final title = tc.title.isNotEmpty
+                ? tc.title
                 : l10n.homeDefaultProducts;
             sections.add(
               _buildHorizontalProductSection(
@@ -468,20 +562,42 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               StaticContentWidget(
                 html: htmlRaw,
                 css: cssRaw,
-                baseUrl: Uri.parse(bagistoEndpoint).origin,
+                baseUrl: bagistoPublicBaseUrl,
                 onViewAllPressed: () => _openViewAll(context, tc.name),
+                onLinkTap: (link) => _openLink(context, link),
               ),
             );
           }
           break;
 
+        case 'services_content':
+          final services = HomeService.listFromOptions(tc.options);
+          if (services.isNotEmpty) {
+            sections.add(ServicesContentSection(services: services));
+          }
+          break;
+
         case 'category_carousel':
-          if (state.categories.isNotEmpty) {
+          final carouselCategories = state.categorySections[tc.id] ?? [];
+          if (carouselCategories.isNotEmpty) {
             sections.add(
               CategoryCarousel(
-                categories: state.categories,
+                categories: carouselCategories,
                 onCategoryTap: (category) =>
                     _openCategoryProducts(context, category),
+              ),
+            );
+          }
+          break;
+
+        case 'footer_links':
+          final columns = HomeFooterLink.columnsFromOptions(tc.options);
+          if (columns.any((column) => column.isNotEmpty)) {
+            footerSections.add(
+              FooterLinksSection(
+                title: tc.name,
+                columns: columns,
+                onLinkTap: _openFooterLink,
               ),
             );
           }
@@ -497,26 +613,39 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     // Add Back to Top button
     sections.add(_buildBackToTopButton());
+    sections.addAll(footerSections);
     sections.add(const SizedBox(height: 16));
 
     return RefreshIndicator(
       color: AppColors.primary500,
       onRefresh: () async {
         final bloc = context.read<HomeBloc>();
+        StoreConfigCubit? storeConfig;
+        try {
+          storeConfig = context.read<StoreConfigCubit>();
+        } on ProviderNotFoundException {
+          storeConfig = null;
+        }
 
-        // Subscribe BEFORE dispatching to avoid missing the loaded emission
-        final future = bloc.stream
-            .firstWhere(
-              (s) =>
-                  s.status == HomeStatus.loaded || s.status == HomeStatus.error,
-            )
-            .timeout(
-              const Duration(seconds: 15),
-              onTimeout: () => bloc.state, // fallback to current state
-            );
+        await refreshHomeData(
+          storeConfig: storeConfig,
+          reloadHome: () async {
+            // Subscribe BEFORE dispatching to avoid missing the loaded emission
+            final future = bloc.stream
+                .firstWhere(
+                  (s) =>
+                      s.status == HomeStatus.loaded ||
+                      s.status == HomeStatus.error,
+                )
+                .timeout(
+                  const Duration(seconds: 15),
+                  onTimeout: () => bloc.state, // fallback to current state
+                );
 
-        bloc.add(const RefreshHome());
-        await future;
+            bloc.add(const RefreshHome());
+            await future;
+          },
+        );
       },
       child: ListView.separated(
         controller: _scrollController,
@@ -553,9 +682,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             final screenWidth = constraints.maxWidth > 0
                 ? constraints.maxWidth
                 : MediaQuery.of(context).size.width;
-            // Figma: 20px padding each side, 12px gap, 2 visible cards + peek
-            // Card width = (screenWidth - 40 - 12) / 2
-            final cardWidth = (screenWidth - 40 - 12) / 2;
+            // 20px padding each side, 12px gaps, two cards plus a peek of
+            // the third so the row reads as horizontally scrollable.
+            final cardWidth = (screenWidth - 40 - 24) / 2.3;
             // Add a little extra space for price/rating rendering on smaller iOS devices.
             final listHeight = cardWidth + 96;
             return SizedBox(

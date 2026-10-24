@@ -1,4 +1,4 @@
-appId: com.webkul.bagisto.mobikul
+appId: com.beenzo
 name: Full App E2E Suite Attached (Android)
 tags:
   - e2e
@@ -76,10 +76,10 @@ env:
       - runFlow:
           when:
             visible:
-              text: "^Mobikul Bagisto Laravel App$"
+              text: "^Beenzo$"
           commands:
             - tapOn:
-                text: "^Mobikul Bagisto Laravel App$"
+                text: "^Beenzo$"
                 waitToSettleTimeoutMs: 1500
             - waitForAnimationToEnd
       - runFlow: helpers/dismiss_runtime_permissions.yaml

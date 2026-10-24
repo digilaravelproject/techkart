@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:bagisto_flutter/core/graphql/queries.dart';
-import 'package:bagisto_flutter/features/category/data/models/category_model.dart';
-import 'package:bagisto_flutter/features/category/data/repository/category_repository.dart';
-import 'package:bagisto_flutter/features/home/data/repository/home_repository.dart';
+import 'package:beenzo/core/graphql/queries.dart';
+import 'package:beenzo/features/category/data/models/category_model.dart';
+import 'package:beenzo/features/category/data/repository/category_repository.dart';
+import 'package:beenzo/features/home/data/repository/home_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:http/http.dart' as http;

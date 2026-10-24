@@ -1,4 +1,4 @@
-appId: com.webkul.bagisto.mobikul
+appId: com.beenzo
 ---
 - retry:
     maxRetries: 3
@@ -76,10 +76,10 @@ appId: com.webkul.bagisto.mobikul
       - runFlow:
           when:
             visible:
-              text: "^Mobikul Bagisto Laravel App$"
+              text: "^Beenzo$"
           commands:
             - tapOn:
-                text: "^Mobikul Bagisto Laravel App$"
+                text: "^Beenzo$"
                 waitToSettleTimeoutMs: 1500
             - waitForAnimationToEnd
       - runFlow: dismiss_runtime_permissions.yaml

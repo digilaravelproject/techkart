@@ -34,6 +34,7 @@ import 'features/home/data/repository/home_repository.dart';
 import 'features/home/presentation/bloc/home_bloc.dart';
 import 'features/home/presentation/pages/main_shell.dart';
 import 'features/splash/presentation/splash_screen.dart';
+import 'features/affiliate/data/repository/affiliate_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -474,6 +475,9 @@ class BagistoApp extends StatelessWidget {
           ),
           RepositoryProvider<HomeRepository>(
             create: (_) => HomeRepository(client: clientNotifier.value),
+          ),
+          RepositoryProvider<AffiliateRepository>(
+            create: (_) => AffiliateRepository(client: clientNotifier.value),
           ),
         ],
         child: MultiBlocProvider(

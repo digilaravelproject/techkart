@@ -1,8 +1,8 @@
-import 'package:bagisto_flutter/features/account/data/models/account_models.dart';
-import 'package:bagisto_flutter/features/account/data/repository/account_repository.dart';
-import 'package:bagisto_flutter/features/account/presentation/bloc/order_detail_bloc.dart';
-import 'package:bagisto_flutter/features/account/presentation/pages/order_detail_page.dart';
-import 'package:bagisto_flutter/l10n/app_localizations.dart';
+import 'package:beenzo/features/account/data/models/account_models.dart';
+import 'package:beenzo/features/account/data/repository/account_repository.dart';
+import 'package:beenzo/features/account/presentation/bloc/order_detail_bloc.dart';
+import 'package:beenzo/features/account/presentation/pages/order_detail_page.dart';
+import 'package:beenzo/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';

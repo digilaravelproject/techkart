@@ -1,5 +1,5 @@
-import 'package:bagisto_flutter/features/home/data/models/home_models.dart';
-import 'package:bagisto_flutter/features/home/presentation/widgets/image_carousel.dart';
+import 'package:beenzo/features/home/data/models/home_models.dart';
+import 'package:beenzo/features/home/presentation/widgets/image_carousel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

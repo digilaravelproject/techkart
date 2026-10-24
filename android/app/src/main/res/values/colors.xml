@@ -19,4 +19,5 @@
     <color name="colorPrimaryDark">#FFe6e6e6</color>
     <color name="colorAccent">#FF000000</color>
 
+	<color name="ic_launcher_background">#FFFFFF</color>
 </resources>

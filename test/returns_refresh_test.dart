@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:bagisto_flutter/features/account/data/models/returns_models.dart';
-import 'package:bagisto_flutter/features/account/data/repository/account_repository.dart';
-import 'package:bagisto_flutter/features/account/presentation/bloc/returns_bloc.dart';
+import 'package:beenzo/features/account/data/models/returns_models.dart';
+import 'package:beenzo/features/account/data/repository/account_repository.dart';
+import 'package:beenzo/features/account/presentation/bloc/returns_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 

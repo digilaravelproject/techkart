@@ -1,8 +1,8 @@
-import 'package:bagisto_flutter/core/graphql/queries.dart';
-import 'package:bagisto_flutter/features/cart/data/models/cart_model.dart';
-import 'package:bagisto_flutter/features/cart/data/repository/cart_repository.dart';
-import 'package:bagisto_flutter/features/category/data/models/product_model.dart';
-import 'package:bagisto_flutter/features/product/domain/models/customizable_file_selection.dart';
+import 'package:beenzo/core/graphql/queries.dart';
+import 'package:beenzo/features/cart/data/models/cart_model.dart';
+import 'package:beenzo/features/cart/data/repository/cart_repository.dart';
+import 'package:beenzo/features/category/data/models/product_model.dart';
+import 'package:beenzo/features/product/domain/models/customizable_file_selection.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

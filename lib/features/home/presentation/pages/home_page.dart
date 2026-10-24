@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/constants/api_constants.dart';
@@ -19,7 +17,6 @@ import '../bloc/home_bloc.dart';
 import '../widgets/category_carousel.dart';
 import '../widgets/image_carousel.dart';
 import '../widgets/product_card_large.dart';
-import '../widgets/product_card_small.dart';
 import '../widgets/recently_viewed_products_section.dart';
 import '../widgets/section_header.dart';
 import '../widgets/static_content_widget.dart';
@@ -321,27 +318,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Bagisto logo + text
-                    Row(
-                      children: [
-                        SvgPicture.asset(
-                          'assets/images/bagisto_logo.svg',
-                          width: 20,
-                          height: 20,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'bagisto',
-                          style: TextStyle(
-                            fontFamily: 'Montserrat',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: isDark
-                                ? AppColors.neutral100
-                                : AppColors.black,
-                          ),
-                        ),
-                      ],
+                    // BENZOO logo
+                    Image.asset(
+                      'assets/images/app_logo_transparent.png',
+                      height: 26,
+                      fit: BoxFit.contain,
                     ),
                     // Search icon
                     GestureDetector(

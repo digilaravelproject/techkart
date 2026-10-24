@@ -64,6 +64,8 @@ assets/ml/
 **/*.webp
 !Docs/features_images/
 !Docs/features_images/**
+!assets/images/
+!assets/images/**
 # Google Services configuration files - ignore by default,
 # but keep the sanitized placeholder files tracked in this repo.
 # **/google-services.json

@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:000000000000:android:1234567890abcdef12345678",
         "android_client_info": {
-          "package_name": "com.webkul.bagisto.mobikul"
+          "package_name": "com.beenzo"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "000000000000-dummyandroidclient.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.webkul.bagisto.mobikul",
+            "package_name": "com.beenzo",
             "certificate_hash": "0000000000000000000000000000000000000000"
           }
         },

@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:bagisto_flutter/features/account/presentation/pages/review_video_player_page.dart';
-import 'package:bagisto_flutter/features/account/presentation/widgets/review_video_thumbnail.dart';
-import 'package:bagisto_flutter/l10n/app_localizations.dart';
+import 'package:beenzo/features/account/presentation/pages/review_video_player_page.dart';
+import 'package:beenzo/features/account/presentation/widgets/review_video_thumbnail.dart';
+import 'package:beenzo/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

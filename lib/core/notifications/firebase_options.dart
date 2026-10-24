@@ -14,7 +14,7 @@ class FirebasePlaceholderConfig {
   static const storageBucket = 'placeholder-firebase-project.appspot.com';
   static const androidAppId = '1:000000000000:android:1234567890abcdef12345678';
   static const iosAppId = '1:000000000000:ios:1234567890abcdef12345678';
-  static const iosBundleId = 'com.webkul.bagistoApp.iOS';
+  static const iosBundleId = 'com.beenzo';
 }
 
 class DefaultFirebaseOptions {

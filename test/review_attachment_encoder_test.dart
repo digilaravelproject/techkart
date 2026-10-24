@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bagisto_flutter/features/account/data/repository/account_repository.dart';
-import 'package:bagisto_flutter/features/account/data/utils/review_attachment_encoder.dart';
+import 'package:beenzo/features/account/data/repository/account_repository.dart';
+import 'package:beenzo/features/account/data/utils/review_attachment_encoder.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

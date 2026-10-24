@@ -28,6 +28,7 @@ import '../pages/settings_bottom_sheet.dart';
 import '../pages/wishlist_page.dart';
 import '../widgets/account_menu_item.dart';
 import '../../../../core/widgets/app_back_button.dart';
+import '../../../affiliate/presentation/pages/affiliate_dashboard_page.dart';
 
 /// Account Menu Page — Figma node-id=220-6770
 ///
@@ -241,6 +242,12 @@ class _AccountMenuBody extends StatelessWidget {
 
           // Menu items with 2px gap — Figma gap: 2px
           AccountMenuItem(
+            label: 'Refer & Earn (Affiliate)',
+            trailingIcon: Icons.chevron_right,
+            onTap: () => _onMenuItemTap(context, AccountMenuAction.referAndEarn),
+          ),
+          const SizedBox(height: 2),
+          AccountMenuItem(
             label: l10n.accountMyOrders,
             trailingIcon: Icons.chevron_right,
             onTap: () => _onMenuItemTap(context, AccountMenuAction.myOrders),
@@ -306,6 +313,9 @@ class _AccountMenuBody extends StatelessWidget {
   /// Handle menu item taps — navigate to sub-pages
   void _onMenuItemTap(BuildContext context, AccountMenuAction action) {
     switch (action) {
+      case AccountMenuAction.referAndEarn:
+        AffiliateDashboardPage.navigate(context);
+        break;
       case AccountMenuAction.myOrders:
         final repository = context.read<AccountRepository>();
         Navigator.of(context).push(
@@ -565,6 +575,7 @@ class _AccountMenuBody extends StatelessWidget {
 
 /// Enum for account menu actions
 enum AccountMenuAction {
+  referAndEarn,
   myOrders,
   returns,
   downloadableProducts,

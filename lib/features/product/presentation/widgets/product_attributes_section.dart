@@ -20,6 +20,7 @@ import 'product_booking_options_section.dart';
 import 'product_bundle_options_section.dart';
 import 'product_customizable_options_section.dart';
 import 'product_grouped_products_section.dart';
+import '../../../affiliate/presentation/widgets/product_share_earn_banner.dart';
 
 /// Attributes section: Size swatches, Color swatches, Text swatches,
 /// Quantity picker, and Wishlist/Compare/Share action row
@@ -96,6 +97,14 @@ class ProductAttributesSection extends StatelessWidget {
 
               // ── Wishlist / Compare / Share ──
               _buildActionRow(context),
+
+              // ── BEENZO Affiliate: Share & Earn Banner ──
+              if ((product.numericId ?? int.tryParse(product.id.split('/').last) ?? 0) > 0) ...[
+                const SizedBox(height: 8),
+                ProductShareEarnBanner(
+                  productId: product.numericId ?? int.tryParse(product.id.split('/').last) ?? 0,
+                ),
+              ],
             ],
           ),
         );

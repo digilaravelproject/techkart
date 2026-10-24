@@ -196,13 +196,13 @@ class _LoggedOutView extends StatelessWidget {
     );
   }
 
-  /// Bagisto logo icon + "bagisto" wordmark
+  /// BENZOO logo
   Widget _buildLogo(bool isDark) {
     return Center(
-      child: SvgPicture.asset(
-        'assets/images/bagisto_logo.svg',
-        height: 60,
-        width: 60,
+      child: Image.asset(
+        'assets/images/app_logo_transparent.png',
+        height: 52,
+        fit: BoxFit.contain,
       ),
     );
   }

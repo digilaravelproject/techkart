@@ -1,8 +1,8 @@
-import 'package:bagisto_flutter/features/auth/data/repository/auth_repository.dart';
-import 'package:bagisto_flutter/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:bagisto_flutter/features/category/data/models/product_model.dart';
-import 'package:bagisto_flutter/features/product/presentation/widgets/product_info_section.dart';
-import 'package:bagisto_flutter/l10n/app_localizations.dart';
+import 'package:beenzo/features/auth/data/repository/auth_repository.dart';
+import 'package:beenzo/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:beenzo/features/category/data/models/product_model.dart';
+import 'package:beenzo/features/product/presentation/widgets/product_info_section.dart';
+import 'package:beenzo/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';

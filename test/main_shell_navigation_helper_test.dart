@@ -1,5 +1,5 @@
-import 'package:bagisto_flutter/core/navigation/app_navigator.dart';
-import 'package:bagisto_flutter/features/home/presentation/helpers/main_shell_navigation_helpers.dart';
+import 'package:beenzo/core/navigation/app_navigator.dart';
+import 'package:beenzo/features/home/presentation/helpers/main_shell_navigation_helpers.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

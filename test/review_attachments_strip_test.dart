@@ -1,6 +1,6 @@
-import 'package:bagisto_flutter/features/account/data/models/review_attachment.dart';
-import 'package:bagisto_flutter/features/account/presentation/widgets/review_attachments_strip.dart';
-import 'package:bagisto_flutter/l10n/app_localizations.dart';
+import 'package:beenzo/features/account/data/models/review_attachment.dart';
+import 'package:beenzo/features/account/presentation/widgets/review_attachments_strip.dart';
+import 'package:beenzo/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

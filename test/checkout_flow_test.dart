@@ -8,10 +8,10 @@
 //   The old code conflated them, passing the auth token as $token, which failed.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bagisto_flutter/features/cart/data/models/cart_model.dart';
-import 'package:bagisto_flutter/features/checkout/data/models/checkout_model.dart';
-import 'package:bagisto_flutter/features/checkout/data/repository/checkout_repository.dart';
-import 'package:bagisto_flutter/features/checkout/presentation/bloc/checkout_bloc.dart';
+import 'package:beenzo/features/cart/data/models/cart_model.dart';
+import 'package:beenzo/features/checkout/data/models/checkout_model.dart';
+import 'package:beenzo/features/checkout/data/repository/checkout_repository.dart';
+import 'package:beenzo/features/checkout/presentation/bloc/checkout_bloc.dart';
 
 void main() {
   // ════════════════════════════════════════════════════════════════════════

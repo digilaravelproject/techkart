@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bagisto_flutter/features/account/data/repository/account_repository.dart';
-import 'package:bagisto_flutter/features/account/presentation/bloc/add_review_bloc.dart';
+import 'package:beenzo/features/account/data/repository/account_repository.dart';
+import 'package:beenzo/features/account/presentation/bloc/add_review_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:http/http.dart' as http;

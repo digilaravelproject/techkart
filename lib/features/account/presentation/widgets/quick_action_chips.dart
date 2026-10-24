@@ -10,6 +10,7 @@ import '../pages/orders_page.dart';
 import '../pages/account_menu_page.dart';
 import '../pages/preferences_bottom_sheet.dart';
 import '../pages/settings_bottom_sheet.dart';
+import '../../../affiliate/presentation/pages/affiliate_dashboard_page.dart';
 
 /// Quick action chips: My Orders, Account, Settings
 /// Figma: node-id=220-6548
@@ -80,6 +81,67 @@ class QuickActionChips extends StatelessWidget {
                 },
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          // ── Refer & Earn Quick Banner ──
+          GestureDetector(
+            onTap: () => AffiliateDashboardPage.navigate(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.primary50, AppColors.primary100],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.primary300),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary600,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.card_giftcard,
+                      size: 16,
+                      color: AppColors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Refer & Earn Rewards',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: AppColors.primary900,
+                          ),
+                        ),
+                        Text(
+                          'Share products & earn wallet cashback',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.neutral700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
+                    color: AppColors.primary600,
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

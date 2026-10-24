@@ -1,4 +1,4 @@
-import 'package:bagisto_flutter/features/account/data/models/returns_models.dart';
+import 'package:beenzo/features/account/data/models/returns_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

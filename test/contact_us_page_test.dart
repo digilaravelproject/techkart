@@ -1,6 +1,6 @@
-import 'package:bagisto_flutter/features/account/presentation/bloc/contact_us_cubit.dart';
-import 'package:bagisto_flutter/features/account/presentation/pages/contact_us_page.dart';
-import 'package:bagisto_flutter/l10n/app_localizations.dart';
+import 'package:beenzo/features/account/presentation/bloc/contact_us_cubit.dart';
+import 'package:beenzo/features/account/presentation/pages/contact_us_page.dart';
+import 'package:beenzo/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';

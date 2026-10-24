@@ -1,9 +1,9 @@
-import 'package:bagisto_flutter/core/graphql/account_queries.dart';
-import 'package:bagisto_flutter/core/graphql/queries.dart';
-import 'package:bagisto_flutter/features/account/data/models/account_models.dart'
+import 'package:beenzo/core/graphql/account_queries.dart';
+import 'package:beenzo/core/graphql/queries.dart';
+import 'package:beenzo/features/account/data/models/account_models.dart'
     as account;
-import 'package:bagisto_flutter/features/account/data/models/review_attachment.dart';
-import 'package:bagisto_flutter/features/category/data/models/product_model.dart'
+import 'package:beenzo/features/account/data/models/review_attachment.dart';
+import 'package:beenzo/features/category/data/models/product_model.dart'
     as category;
 import 'package:flutter_test/flutter_test.dart';
 

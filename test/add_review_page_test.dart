@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:bagisto_flutter/features/account/data/models/account_models.dart';
-import 'package:bagisto_flutter/features/account/data/repository/account_repository.dart';
-import 'package:bagisto_flutter/features/account/presentation/bloc/add_review_bloc.dart';
-import 'package:bagisto_flutter/features/account/presentation/pages/add_review_page.dart';
-import 'package:bagisto_flutter/features/account/presentation/pages/review_video_player_page.dart';
-import 'package:bagisto_flutter/l10n/app_localizations.dart';
+import 'package:beenzo/features/account/data/models/account_models.dart';
+import 'package:beenzo/features/account/data/repository/account_repository.dart';
+import 'package:beenzo/features/account/presentation/bloc/add_review_bloc.dart';
+import 'package:beenzo/features/account/presentation/pages/add_review_page.dart';
+import 'package:beenzo/features/account/presentation/pages/review_video_player_page.dart';
+import 'package:beenzo/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';

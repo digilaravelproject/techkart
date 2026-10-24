@@ -1,41 +1,9 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 
-/// Design tokens extracted from Figma design
-/// Light mode: node-id=92-1679
-/// Dark mode: node-id=92-1730
+export '../constants/app_colors.dart';
 
-class AppColors {
-  // Primary
-  static const Color primary500 = Color(0xFFFF6900);
-  static const Color primary600 = Color(0xFFF54900);
-
-  // Neutral - Light
-  static const Color neutral50 = Color(0xFFFAFAFA);
-  static const Color neutral100 = Color(0xFFF5F5F5);
-  static const Color neutral200 = Color(0xFFE5E5E5);
-  static const Color neutral300 = Color(0xFFD4D4D4);
-  static const Color neutral400 = Color(0xFFA1A1A1);
-  static const Color neutral500 = Color(0xFF737373);
-  static const Color neutral600 = Color(0xFF525252);
-  static const Color neutral700 = Color(0xFF404040);
-  static const Color neutral800 = Color(0xFF262626);
-  static const Color neutral900 = Color(0xFF171717);
-
-  // Status
-  static const Color successGreen = Color(0xFF00A63E);
-  static const Color success50 = Color(0xFFF0FDF4);
-  static const Color success500 = Color(0xFF00C950);
-  static const Color success700 = Color(0xFF008236);
-  static const Color errorRed = Color(0xFFFB2C36);
-
-  // Process / Info
-  static const Color process600 = Color(0xFF155DFC);
-  static const Color process700 = Color(0xFF1447E6);
-
-  // Static
-  static const Color white = Color(0xFFFFFFFF);
-  static const Color black = Color(0xFF000000);
-}
+/// Design tokens extracted from Figma design & Bagisto BEENZO storefront theme
 
 class AppTextStyles {
   /// Text-2: Roboto 500, 20px (auth heading)
@@ -184,6 +152,11 @@ class AppTheme {
         onSurface: AppColors.neutral900,
         outline: AppColors.neutral200,
       ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.primary500,
+        selectionColor: AppColors.textSelection,
+        selectionHandleColor: AppColors.primary500,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.white,
         foregroundColor: AppColors.neutral900,
@@ -227,6 +200,11 @@ class AppTheme {
         surface: AppColors.neutral900,
         onSurface: AppColors.neutral200,
         outline: AppColors.neutral800,
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.primary500,
+        selectionColor: AppColors.textSelection,
+        selectionHandleColor: AppColors.primary500,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.neutral900,

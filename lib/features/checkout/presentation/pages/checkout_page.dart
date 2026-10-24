@@ -106,16 +106,6 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
   bool _shouldOfferSaveToAddressBook(CheckoutState state) =>
       !state.isGuest && state.addresses.isEmpty;
 
-  @override
-  void initState() {
-    super.initState();
-    // Logged-in orders use the account email; show it in the form.
-    final authState = context.read<AuthBloc>().state;
-    if (authState is AuthAuthenticated) {
-      _billingEmailCtrl.text = authState.userEmail ?? '';
-    }
-  }
-
   // Local selection state for immediate UI response
   String? _selectedShippingMethod;
   String? _selectedPaymentMethod;
@@ -175,6 +165,11 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
   @override
   void initState() {
     super.initState();
+    // Logged-in orders use the account email; show it in the form.
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      _billingEmailCtrl.text = authState.userEmail ?? '';
+    }
     _razorpay = Razorpay();
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handleRazorpaySuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handleRazorpayError);

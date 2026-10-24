@@ -1,6 +1,9 @@
 /// Bagisto GraphQL endpoint
 const String bagistoEndpoint = 'https://indigo-rhinoceros-151425.hostingersite.com/api/graphql';
 
+/// Bagisto public base URL used to resolve relative media and link paths
+const String bagistoPublicBaseUrl = 'https://indigo-rhinoceros-151425.hostingersite.com';
+
 /// Storefront key for Bagisto API
 const String storefrontKey =
     'pk_storefront_WweL5embxeDdB3osjABIgHyBq6fPhST1';

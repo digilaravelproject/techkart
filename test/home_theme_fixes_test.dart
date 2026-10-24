@@ -219,13 +219,17 @@ void main() {
     final links = columns.expand((column) => column).toList();
     expect(columns, hasLength(2));
     expect(links.map((link) => link.title), ['About Us', 'Privacy Policy']);
+    final expectedAboutUs =
+        Uri.parse(bagistoPublicBaseUrl).resolve('page/about-us').toString();
+    final expectedPrivacy =
+        Uri.parse(bagistoPublicBaseUrl).resolve('page/privacy-policy').toString();
     expect(
       links.first.resolveUrl(bagistoPublicBaseUrl),
-      'http://192.168.15.239/Bagisto-Api/new-setup/public/page/about-us',
+      expectedAboutUs,
     );
     expect(
       links.last.resolveUrl(bagistoPublicBaseUrl),
-      'http://192.168.15.239/Bagisto-Api/new-setup/public/page/privacy-policy',
+      expectedPrivacy,
     );
   });
 
@@ -281,9 +285,12 @@ void main() {
       imageUrl: 'storage/themes/default/sections/1/banner.webp',
     );
 
+    final cleanBase = bagistoPublicBaseUrl.endsWith('/')
+        ? bagistoPublicBaseUrl.substring(0, bagistoPublicBaseUrl.length - 1)
+        : bagistoPublicBaseUrl;
     expect(
       banner.fullImageUrl(bagistoPublicBaseUrl),
-      'http://192.168.15.239/Bagisto-Api/new-setup/public/storage/themes/default/sections/1/banner.webp',
+      '$cleanBase/storage/themes/default/sections/1/banner.webp',
     );
   });
 }

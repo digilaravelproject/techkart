@@ -412,7 +412,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         fit: BoxFit.contain,
                       ),
                     ),
-                    ),
                     // Search icon
                     GestureDetector(
                       onTap: () => _openSearchPage(context),

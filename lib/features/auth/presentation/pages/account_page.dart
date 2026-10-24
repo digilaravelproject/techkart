@@ -1,7 +1,6 @@
 import '../../../account/presentation/pages/guest_eu_withdrawal_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/widgets/channel_logo.dart';
 import '../../../../core/currency/currency_cubit.dart';
 import '../../../../core/graphql/graphql_client.dart';

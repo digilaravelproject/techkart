@@ -1550,11 +1550,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get accountDelete => 'Supprimer';
 
   @override
-  String get accountDeleteAddress => 'Delete Address';
+  String get accountDeleteAddress => 'Supprimer l\'adresse';
 
   @override
   String get accountDeleteAddressConfirm =>
-      'Are you sure you want to delete this address?';
+      'Êtes-vous sûr de vouloir supprimer cette adresse ?';
 
   @override
   String get accountGenderMale => 'Homme';

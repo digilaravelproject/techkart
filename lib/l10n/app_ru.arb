@@ -466,6 +466,8 @@
   "accountDeleteWarning": "Это действие необратимо. Все ваши данные будут удалены.",
   "accountEnterYourPassword": "Введите пароль",
   "accountDelete": "Удалить",
+  "accountDeleteAddress": "Удалить адрес",
+  "accountDeleteAddressConfirm": "Вы уверены, что хотите удалить этот адрес?",
   "accountGenderMale": "Мужской",
   "accountGenderFemale": "Женский",
   "accountGenderOther": "Другой",

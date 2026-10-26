@@ -466,6 +466,8 @@
   "accountDeleteWarning": "Ця дія є незворотною. Усі ваші дані буде видалено.",
   "accountEnterYourPassword": "Введіть пароль",
   "accountDelete": "Видалити",
+  "accountDeleteAddress": "Видалити адресу",
+  "accountDeleteAddressConfirm": "Ви дійсно бажаєте видалити цю адресу?",
   "accountGenderMale": "Чоловіча",
   "accountGenderFemale": "Жіноча",
   "accountGenderOther": "Інша",

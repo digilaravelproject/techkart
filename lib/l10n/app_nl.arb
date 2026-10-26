@@ -573,6 +573,8 @@
   "accountDeleteWarning": "Deze actie is permanent en kan niet ongedaan worden gemaakt. Al je gegevens worden verwijderd.",
   "accountEnterYourPassword": "Voer je wachtwoord in",
   "accountDelete": "Verwijderen",
+  "accountDeleteAddress": "Adres verwijderen",
+  "accountDeleteAddressConfirm": "Weet u zeker dat u dit adres wilt verwijderen?",
   "accountGenderMale": "Man",
   "accountGenderFemale": "Vrouw",
   "accountGenderOther": "Anders",

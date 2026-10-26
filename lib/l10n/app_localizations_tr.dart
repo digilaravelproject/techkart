@@ -1531,11 +1531,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get accountDelete => 'Sil';
 
   @override
-  String get accountDeleteAddress => 'Delete Address';
+  String get accountDeleteAddress => 'Adresi Sil';
 
   @override
   String get accountDeleteAddressConfirm =>
-      'Are you sure you want to delete this address?';
+      'Bu adresi silmek istediğinizden emin misiniz?';
 
   @override
   String get accountGenderMale => 'Erkek';

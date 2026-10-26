@@ -573,6 +573,8 @@
   "accountDeleteWarning": "Bu işlem kalıcıdır ve geri alınamaz. Tüm verileriniz silinecektir.",
   "accountEnterYourPassword": "Şifrenizi girin",
   "accountDelete": "Sil",
+  "accountDeleteAddress": "Adresi Sil",
+  "accountDeleteAddressConfirm": "Bu adresi silmek istediğinizden emin misiniz?",
   "accountGenderMale": "Erkek",
   "accountGenderFemale": "Kadın",
   "accountGenderOther": "Diğer",

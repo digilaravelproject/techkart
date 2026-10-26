@@ -573,6 +573,8 @@
   "accountDeleteWarning": "Diese Aktion ist dauerhaft und kann nicht rückgängig gemacht werden. Alle Ihre Daten werden gelöscht.",
   "accountEnterYourPassword": "Geben Sie Ihr Passwort ein",
   "accountDelete": "Löschen",
+  "accountDeleteAddress": "Adresse löschen",
+  "accountDeleteAddressConfirm": "Möchten Sie diese Adresse wirklich löschen?",
   "accountGenderMale": "Männlich",
   "accountGenderFemale": "Weiblich",
   "accountGenderOther": "Andere",

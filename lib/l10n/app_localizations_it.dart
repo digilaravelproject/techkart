@@ -1544,11 +1544,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get accountDelete => 'Elimina';
 
   @override
-  String get accountDeleteAddress => 'Delete Address';
+  String get accountDeleteAddress => 'Elimina indirizzo';
 
   @override
   String get accountDeleteAddressConfirm =>
-      'Are you sure you want to delete this address?';
+      'Sei sicuro di voler eliminare questo indirizzo?';
 
   @override
   String get accountGenderMale => 'Maschio';

@@ -573,6 +573,8 @@
   "accountDeleteWarning": "Cette action est définitive et ne peut pas être annulée. Toutes vos données seront supprimées.",
   "accountEnterYourPassword": "Saisissez votre mot de passe",
   "accountDelete": "Supprimer",
+  "accountDeleteAddress": "Supprimer l'adresse",
+  "accountDeleteAddressConfirm": "Êtes-vous sûr de vouloir supprimer cette adresse ?",
   "accountGenderMale": "Homme",
   "accountGenderFemale": "Femme",
   "accountGenderOther": "Autre",

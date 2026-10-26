@@ -1535,11 +1535,11 @@ class AppLocalizationsNl extends AppLocalizations {
   String get accountDelete => 'Verwijderen';
 
   @override
-  String get accountDeleteAddress => 'Delete Address';
+  String get accountDeleteAddress => 'Adres verwijderen';
 
   @override
   String get accountDeleteAddressConfirm =>
-      'Are you sure you want to delete this address?';
+      'Weet u zeker dat u dit adres wilt verwijderen?';
 
   @override
   String get accountGenderMale => 'Man';

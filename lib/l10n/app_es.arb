@@ -573,6 +573,8 @@
   "accountDeleteWarning": "Esta acción es permanente y no se puede deshacer. Todos tus datos serán eliminados.",
   "accountEnterYourPassword": "Ingresa tu contraseña",
   "accountDelete": "Eliminar",
+  "accountDeleteAddress": "Eliminar dirección",
+  "accountDeleteAddressConfirm": "¿Está seguro de que desea eliminar esta dirección?",
   "accountGenderMale": "Masculino",
   "accountGenderFemale": "Femenino",
   "accountGenderOther": "Otro",

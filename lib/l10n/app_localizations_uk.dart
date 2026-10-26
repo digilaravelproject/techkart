@@ -1533,11 +1533,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get accountDelete => 'Видалити';
 
   @override
-  String get accountDeleteAddress => 'Delete Address';
+  String get accountDeleteAddress => 'Видалити адресу';
 
   @override
   String get accountDeleteAddressConfirm =>
-      'Are you sure you want to delete this address?';
+      'Ви дійсно бажаєте видалити цю адресу?';
 
   @override
   String get accountGenderMale => 'Чоловіча';

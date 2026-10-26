@@ -520,10 +520,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get productSelectDownloadLink => 'يرجى اختيار رابط واحد على الأقل';
 
   @override
-  String get cartViewMore => 'View More';
+  String get cartViewMore => 'عرض المزيد';
 
   @override
-  String get cartViewLess => 'View Less';
+  String get cartViewLess => 'عرض أقل';
 
   @override
   String get cartEmptyCartAction => 'إفراغ السلة';
@@ -1514,11 +1514,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountDelete => 'حذف';
 
   @override
-  String get accountDeleteAddress => 'Delete Address';
+  String get accountDeleteAddress => 'حذف العنوان';
 
   @override
   String get accountDeleteAddressConfirm =>
-      'Are you sure you want to delete this address?';
+      'هل أنت متأكد أنك تريد حذف هذا العنوان؟';
 
   @override
   String get accountGenderMale => 'ذكر';

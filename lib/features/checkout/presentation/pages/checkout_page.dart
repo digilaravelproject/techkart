@@ -1028,6 +1028,7 @@ class _CheckoutPageViewState extends State<_CheckoutPageView> {
     showModalBottomSheet(
       context: pageContext,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: isDark ? AppColors.neutral900 : AppColors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

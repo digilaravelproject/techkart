@@ -565,6 +565,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
 
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
+      useSafeArea: true,
       backgroundColor: isDark ? AppColors.neutral800 : AppColors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

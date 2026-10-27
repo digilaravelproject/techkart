@@ -100,7 +100,10 @@ class AffiliateDashboardPage extends StatelessWidget {
                 ),
             ],
           ),
-          body: _buildBody(context, state, isDark),
+          body: SafeArea(
+            top: false,
+            child: _buildBody(context, state, isDark),
+          ),
         );
       },
     );

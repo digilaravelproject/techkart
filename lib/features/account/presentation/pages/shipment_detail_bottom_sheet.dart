@@ -40,6 +40,7 @@ class ShipmentDetailBottomSheet extends StatefulWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => BlocProvider.value(
         value: bloc,

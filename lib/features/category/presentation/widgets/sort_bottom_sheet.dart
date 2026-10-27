@@ -24,6 +24,7 @@ class SortBottomSheet extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => SortBottomSheet(
         currentSort: currentSort,
         onSortSelected: onSortSelected,

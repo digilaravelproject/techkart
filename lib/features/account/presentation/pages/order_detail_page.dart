@@ -1417,6 +1417,7 @@ class _ItemCard extends StatelessWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         final mediaQuery = MediaQuery.of(sheetContext);

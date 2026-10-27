@@ -1,8 +1,11 @@
 /// Bagisto GraphQL endpoint
-const String bagistoEndpoint = 'https://indigo-rhinoceros-151425.hostingersite.com/api/graphql';
+const String bagistoEndpoint = 'https://benzoo.in/api/graphql';
 
 /// Bagisto public base URL used to resolve relative media and link paths
-const String bagistoPublicBaseUrl = 'https://indigo-rhinoceros-151425.hostingersite.com';
+const String bagistoPublicBaseUrl = 'https://benzoo.in';
+
+/// Bagisto Affiliate REST base endpoint (used for REST fallback & alternative)
+const String affiliateRestBaseUrl = '$bagistoPublicBaseUrl/api/v1/affiliate';
 
 /// Storefront key for Bagisto API
 const String storefrontKey =

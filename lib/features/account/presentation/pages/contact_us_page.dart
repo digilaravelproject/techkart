@@ -16,6 +16,7 @@ class ContactUsPage extends StatefulWidget {
     final result = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => BlocProvider(
         create: (_) => ContactUsCubit(),

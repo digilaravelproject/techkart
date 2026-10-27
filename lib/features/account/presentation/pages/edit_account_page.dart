@@ -438,6 +438,7 @@ class _EditAccountPageState extends State<EditAccountPage> {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<String>(
       context: context,
+      useSafeArea: true,
       backgroundColor: isDark ? AppColors.neutral800 : AppColors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

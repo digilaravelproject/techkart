@@ -3,6 +3,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../../../core/graphql/affiliate_queries.dart';
 import '../../../../core/graphql/graphql_client.dart';
 import '../../../auth/domain/services/auth_storage.dart';
+import '../datasources/affiliate_rest_datasource.dart';
 import '../models/affiliate_models.dart';
 
 class AffiliateException implements Exception {
@@ -14,10 +15,16 @@ class AffiliateException implements Exception {
 }
 
 /// Repository responsible for all Affiliate, Referral and Wallet operations.
+/// Primary: Bagisto GraphQL API
+/// Fallback: Bagisto REST API (/api/v1/affiliate)
 class AffiliateRepository {
   final GraphQLClient? client;
+  final AffiliateRestDataSource restDataSource;
 
-  AffiliateRepository({this.client});
+  AffiliateRepository({
+    this.client,
+    AffiliateRestDataSource? restDataSource,
+  }) : restDataSource = restDataSource ?? AffiliateRestDataSource();
 
   /// Obtain an authenticated or guest GraphQL client
   Future<GraphQLClient> _getClient() async {
@@ -42,19 +49,26 @@ class AffiliateRepository {
 
       if (result.hasException) {
         final err = _extractErrorMessage(result.exception!);
-        debugPrint('❌ AffiliateRepo.getDashboard error: $err');
         throw AffiliateException(err);
       }
 
       final data = result.data?['affiliateDashboard'];
       if (data == null) {
-        return AffiliateDashboardData.empty();
+        throw AffiliateException('Empty response received from GraphQL');
       }
 
       return AffiliateDashboardData.fromJson(data as Map<String, dynamic>);
-    } catch (e) {
-      if (e is AffiliateException) rethrow;
-      throw AffiliateException('Failed to load affiliate dashboard: $e');
+    } catch (gqlErr) {
+      debugPrint('⚠️ [AffiliateRepo] GraphQL getDashboard failed: $gqlErr. Falling back to REST API...');
+      try {
+        final result = await restDataSource.getDashboard();
+        debugPrint('✅ [AffiliateRepo] REST getDashboard fallback successful!');
+        return result;
+      } catch (restErr) {
+        debugPrint('❌ [AffiliateRepo] REST fallback getDashboard also failed: $restErr');
+        if (restErr is AffiliateException) rethrow;
+        throw AffiliateException('Failed to load affiliate dashboard: $gqlErr');
+      }
     }
   }
 
@@ -73,17 +87,23 @@ class AffiliateRepository {
 
       if (result.hasException) {
         final err = _extractErrorMessage(result.exception!);
-        debugPrint('⚠️ AffiliateRepo.getProductShareInfo warning: $err');
-        return null;
+        throw AffiliateException(err);
       }
 
       final data = result.data?['productShareInfo'];
-      if (data == null) return null;
+      if (data == null) {
+        throw AffiliateException('Empty productShareInfo from GraphQL');
+      }
 
       return ProductShareInfo.fromJson(data as Map<String, dynamic>);
-    } catch (e) {
-      debugPrint('⚠️ AffiliateRepo.getProductShareInfo exception: $e');
-      return null;
+    } catch (gqlErr) {
+      debugPrint('⚠️ [AffiliateRepo] GraphQL getProductShareInfo failed: $gqlErr. Falling back to REST API...');
+      try {
+        return await restDataSource.getProductShareInfo(productId);
+      } catch (restErr) {
+        debugPrint('⚠️ [AffiliateRepo] REST getProductShareInfo fallback also failed: $restErr');
+        return null;
+      }
     }
   }
 
@@ -100,7 +120,6 @@ class AffiliateRepository {
 
       if (result.hasException) {
         final err = _extractErrorMessage(result.exception!);
-        debugPrint('❌ AffiliateRepo.registerAffiliate error: $err');
         throw AffiliateException(err);
       }
 
@@ -112,9 +131,17 @@ class AffiliateRepository {
       return AffiliateRegistrationResult.fromJson(
         data as Map<String, dynamic>,
       );
-    } catch (e) {
-      if (e is AffiliateException) rethrow;
-      throw AffiliateException('Failed to activate affiliate: $e');
+    } catch (gqlErr) {
+      debugPrint('⚠️ [AffiliateRepo] GraphQL registerAffiliate failed: $gqlErr. Falling back to REST API...');
+      try {
+        final result = await restDataSource.registerAffiliate();
+        debugPrint('✅ [AffiliateRepo] REST registerAffiliate fallback successful!');
+        return result;
+      } catch (restErr) {
+        debugPrint('❌ [AffiliateRepo] REST fallback registerAffiliate failed: $restErr');
+        if (restErr is AffiliateException) rethrow;
+        throw AffiliateException('Failed to activate affiliate: $gqlErr');
+      }
     }
   }
 
@@ -132,11 +159,11 @@ class AffiliateRepository {
       final activeClient = await _getClient();
       final variables = <String, dynamic>{
         'payoutMethod': payoutMethod,
-        'upiId': ?upiId,
-        'accountNumber': ?accountNumber,
-        'ifscCode': ?ifscCode,
-        'accountHolder': ?accountHolder,
-        'bankName': ?bankName,
+        if (upiId != null) 'upiId': upiId,
+        if (accountNumber != null) 'accountNumber': accountNumber,
+        if (ifscCode != null) 'ifscCode': ifscCode,
+        if (accountHolder != null) 'accountHolder': accountHolder,
+        if (bankName != null) 'bankName': bankName,
       };
 
       final result = await activeClient.mutate(
@@ -148,7 +175,6 @@ class AffiliateRepository {
 
       if (result.hasException) {
         final err = _extractErrorMessage(result.exception!);
-        debugPrint('❌ AffiliateRepo.updatePayoutSettings error: $err');
         throw AffiliateException(err);
       }
 
@@ -158,9 +184,24 @@ class AffiliateRepository {
       }
 
       return PayoutSettingsResult.fromJson(data as Map<String, dynamic>);
-    } catch (e) {
-      if (e is AffiliateException) rethrow;
-      throw AffiliateException('Failed to update payout settings: $e');
+    } catch (gqlErr) {
+      debugPrint('⚠️ [AffiliateRepo] GraphQL updatePayoutSettings failed: $gqlErr. Falling back to REST API...');
+      try {
+        final result = await restDataSource.updatePayoutSettings(
+          payoutMethod: payoutMethod,
+          upiId: upiId,
+          accountNumber: accountNumber,
+          ifscCode: ifscCode,
+          accountHolder: accountHolder,
+          bankName: bankName,
+        );
+        debugPrint('✅ [AffiliateRepo] REST updatePayoutSettings fallback successful!');
+        return result;
+      } catch (restErr) {
+        debugPrint('❌ [AffiliateRepo] REST updatePayoutSettings failed: $restErr');
+        if (restErr is AffiliateException) rethrow;
+        throw AffiliateException('Failed to update payout settings: $gqlErr');
+      }
     }
   }
 
@@ -188,7 +229,6 @@ class AffiliateRepository {
 
       if (result.hasException) {
         final err = _extractErrorMessage(result.exception!);
-        debugPrint('❌ AffiliateRepo.requestPayout error: $err');
         throw AffiliateException(err);
       }
 
@@ -198,9 +238,21 @@ class AffiliateRepository {
       }
 
       return PayoutRequestResult.fromJson(data as Map<String, dynamic>);
-    } catch (e) {
-      if (e is AffiliateException) rethrow;
-      throw AffiliateException('Failed to request withdrawal: $e');
+    } catch (gqlErr) {
+      debugPrint('⚠️ [AffiliateRepo] GraphQL requestPayout failed: $gqlErr. Falling back to REST API...');
+      try {
+        final result = await restDataSource.requestPayout(
+          amount: amount,
+          payoutMethod: payoutMethod,
+          upiId: upiId,
+        );
+        debugPrint('✅ [AffiliateRepo] REST requestPayout fallback successful!');
+        return result;
+      } catch (restErr) {
+        debugPrint('❌ [AffiliateRepo] REST requestPayout failed: $restErr');
+        if (restErr is AffiliateException) rethrow;
+        throw AffiliateException('Failed to request withdrawal: $gqlErr');
+      }
     }
   }
 
@@ -227,18 +279,21 @@ class AffiliateRepository {
 
       final data = result.data?['affiliateTransactions'];
       if (data == null) {
-        return AffiliateTransactionsResponse(
-          data: const [],
-          meta: PaginationMeta.empty(),
-        );
+        throw AffiliateException('Empty transactions response from GraphQL');
       }
 
       return AffiliateTransactionsResponse.fromJson(
         data as Map<String, dynamic>,
       );
-    } catch (e) {
-      if (e is AffiliateException) rethrow;
-      throw AffiliateException('Failed to load transactions: $e');
+    } catch (gqlErr) {
+      debugPrint('⚠️ [AffiliateRepo] GraphQL getTransactions failed: $gqlErr. Falling back to REST API...');
+      try {
+        return await restDataSource.getTransactions(page: page, limit: limit);
+      } catch (restErr) {
+        debugPrint('❌ [AffiliateRepo] REST getTransactions failed: $restErr');
+        if (restErr is AffiliateException) rethrow;
+        throw AffiliateException('Failed to load transactions: $gqlErr');
+      }
     }
   }
 
@@ -265,18 +320,21 @@ class AffiliateRepository {
 
       final data = result.data?['affiliateCommissions'];
       if (data == null) {
-        return AffiliateCommissionsResponse(
-          data: const [],
-          meta: PaginationMeta.empty(),
-        );
+        throw AffiliateException('Empty commissions response from GraphQL');
       }
 
       return AffiliateCommissionsResponse.fromJson(
         data as Map<String, dynamic>,
       );
-    } catch (e) {
-      if (e is AffiliateException) rethrow;
-      throw AffiliateException('Failed to load commissions: $e');
+    } catch (gqlErr) {
+      debugPrint('⚠️ [AffiliateRepo] GraphQL getCommissions failed: $gqlErr. Falling back to REST API...');
+      try {
+        return await restDataSource.getCommissions(page: page, limit: limit);
+      } catch (restErr) {
+        debugPrint('❌ [AffiliateRepo] REST getCommissions failed: $restErr');
+        if (restErr is AffiliateException) rethrow;
+        throw AffiliateException('Failed to load commissions: $gqlErr');
+      }
     }
   }
 
@@ -303,18 +361,21 @@ class AffiliateRepository {
 
       final data = result.data?['affiliatePayouts'];
       if (data == null) {
-        return AffiliatePayoutsResponse(
-          data: const [],
-          meta: PaginationMeta.empty(),
-        );
+        throw AffiliateException('Empty payouts response from GraphQL');
       }
 
       return AffiliatePayoutsResponse.fromJson(
         data as Map<String, dynamic>,
       );
-    } catch (e) {
-      if (e is AffiliateException) rethrow;
-      throw AffiliateException('Failed to load payouts: $e');
+    } catch (gqlErr) {
+      debugPrint('⚠️ [AffiliateRepo] GraphQL getPayouts failed: $gqlErr. Falling back to REST API...');
+      try {
+        return await restDataSource.getPayouts(page: page, limit: limit);
+      } catch (restErr) {
+        debugPrint('❌ [AffiliateRepo] REST getPayouts failed: $restErr');
+        if (restErr is AffiliateException) rethrow;
+        throw AffiliateException('Failed to load payouts: $gqlErr');
+      }
     }
   }
 
@@ -330,10 +391,41 @@ class AffiliateRepository {
         ),
       );
 
-      if (result.hasException) return false;
+      if (result.hasException) {
+        throw AffiliateException('GraphQL track referral error');
+      }
       return result.data?['trackAffiliateReferral']?['success'] == true;
     } catch (_) {
-      return false;
+      debugPrint('⚠️ [AffiliateRepo] GraphQL trackReferral failed. Falling back to REST API...');
+      return await restDataSource.trackReferral(referralCode);
+    }
+  }
+
+  // ─── 10. Generate Custom Affiliate Link ───────────────────────────────────
+
+  Future<Map<String, dynamic>?> generateLink({
+    String? url,
+    int? productId,
+  }) async {
+    try {
+      final activeClient = await _getClient();
+      final result = await activeClient.mutate(
+        MutationOptions(
+          document: gql(AffiliateQueries.generateAffiliateLink),
+          variables: {
+            'url': ?url,
+            'productId': ?productId,
+          },
+        ),
+      );
+
+      if (result.hasException) {
+        throw AffiliateException('GraphQL generate link error');
+      }
+      return result.data?['generateAffiliateLink'] as Map<String, dynamic>?;
+    } catch (_) {
+      debugPrint('⚠️ [AffiliateRepo] GraphQL generateLink failed. Falling back to REST API...');
+      return await restDataSource.generateLink(url: url, productId: productId);
     }
   }
 

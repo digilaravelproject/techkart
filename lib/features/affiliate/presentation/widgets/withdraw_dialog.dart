@@ -20,6 +20,7 @@ class WithdrawDialog extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => WithdrawDialog(
         dashboard: dashboard,
@@ -80,6 +81,14 @@ class _WithdrawDialogState extends State<WithdrawDialog> {
       return;
     }
 
+    if (_selectedMethod == 'bank_transfer') {
+      final bankProfile = widget.dashboard.payoutProfile;
+      if (bankProfile.accountNumber == null || bankProfile.accountNumber!.isEmpty) {
+        setState(() => _errorText = 'Please configure bank account details in Payout Settings first');
+        return;
+      }
+    }
+
     Navigator.of(context).pop();
     widget.onConfirm(
       amount,
@@ -93,20 +102,25 @@ class _WithdrawDialogState extends State<WithdrawDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final available = widget.dashboard.wallet.availableFormatted;
     final minAmount = widget.dashboard.config.minWithdrawalAmount;
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.neutral900 : AppColors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: SingleChildScrollView(
-        child: Column(
+      child: SafeArea(
+        top: false,
+        bottom: true,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 24,
+            bottom: viewInsets > 0 ? viewInsets + 16 : 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -314,6 +328,8 @@ class _WithdrawDialogState extends State<WithdrawDialog> {
           ],
         ),
       ),
-    );
+      ),
+    ),
+  );
   }
 }

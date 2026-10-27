@@ -63,6 +63,7 @@ class FilterBottomSheet extends StatefulWidget {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => FilterBottomSheet(
         filterAttributes: filterAttributes,
         activeFilters: activeFilters,

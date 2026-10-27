@@ -25,26 +25,36 @@ class AffiliateDashboardData extends Equatable {
   bool get isActive => status.toLowerCase() == 'active';
 
   factory AffiliateDashboardData.fromJson(Map<String, dynamic> json) {
+    final raw = json['data'] is Map<String, dynamic>
+        ? json['data'] as Map<String, dynamic>
+        : (json['affiliateDashboard'] is Map<String, dynamic>
+            ? json['affiliateDashboard'] as Map<String, dynamic>
+            : json);
+
     return AffiliateDashboardData(
-      affiliateId: json['affiliateId'] is int
-          ? json['affiliateId']
-          : int.tryParse(json['affiliateId']?.toString() ?? ''),
-      status: json['status']?.toString() ?? 'inactive',
-      referralCode: json['referralCode']?.toString(),
-      referralLink: json['referralLink']?.toString(),
-      wallet: json['wallet'] is Map<String, dynamic>
-          ? AffiliateWallet.fromJson(json['wallet'] as Map<String, dynamic>)
+      affiliateId: raw['affiliateId'] is int
+          ? raw['affiliateId']
+          : (raw['affiliate_id'] is int
+              ? raw['affiliate_id']
+              : int.tryParse(
+                  (raw['affiliateId'] ?? raw['affiliate_id'])?.toString() ?? '',
+                )),
+      status: (raw['status'] ?? raw['affiliate_status'])?.toString() ?? 'inactive',
+      referralCode: (raw['referralCode'] ?? raw['referral_code'])?.toString(),
+      referralLink: (raw['referralLink'] ?? raw['referral_link'])?.toString(),
+      wallet: raw['wallet'] is Map<String, dynamic>
+          ? AffiliateWallet.fromJson(raw['wallet'] as Map<String, dynamic>)
           : AffiliateWallet.empty(),
-      stats: json['stats'] is Map<String, dynamic>
-          ? AffiliateStats.fromJson(json['stats'] as Map<String, dynamic>)
+      stats: raw['stats'] is Map<String, dynamic>
+          ? AffiliateStats.fromJson(raw['stats'] as Map<String, dynamic>)
           : AffiliateStats.empty(),
-      payoutProfile: json['payoutProfile'] is Map<String, dynamic>
+      payoutProfile: (raw['payoutProfile'] ?? raw['payout_profile']) is Map<String, dynamic>
           ? AffiliatePayoutProfile.fromJson(
-              json['payoutProfile'] as Map<String, dynamic>,
+              (raw['payoutProfile'] ?? raw['payout_profile']) as Map<String, dynamic>,
             )
           : AffiliatePayoutProfile.empty(),
-      config: json['config'] is Map<String, dynamic>
-          ? AffiliateConfig.fromJson(json['config'] as Map<String, dynamic>)
+      config: raw['config'] is Map<String, dynamic>
+          ? AffiliateConfig.fromJson(raw['config'] as Map<String, dynamic>)
           : AffiliateConfig.empty(),
     );
   }
@@ -105,17 +115,21 @@ class AffiliateWallet extends Equatable {
 
   factory AffiliateWallet.fromJson(Map<String, dynamic> json) {
     return AffiliateWallet(
-      availableBalance: _toDouble(json['availableBalance']),
-      availableFormatted: json['availableFormatted']?.toString() ?? '₹0.00',
-      pendingBalance: _toDouble(json['pendingBalance']),
-      pendingFormatted: json['pendingFormatted']?.toString() ?? '₹0.00',
-      lockedBalance: _toDouble(json['lockedBalance']),
-      lockedFormatted: json['lockedFormatted']?.toString() ?? '₹0.00',
-      lifetimeEarned: _toDouble(json['lifetimeEarned']),
-      lifetimeFormatted: json['lifetimeFormatted']?.toString() ?? '₹0.00',
-      totalWithdrawn: _toDouble(json['totalWithdrawn']),
+      availableBalance: _toDouble(json['availableBalance'] ?? json['available_balance']),
+      availableFormatted:
+          (json['availableFormatted'] ?? json['available_formatted'])?.toString() ?? '₹0.00',
+      pendingBalance: _toDouble(json['pendingBalance'] ?? json['pending_balance']),
+      pendingFormatted:
+          (json['pendingFormatted'] ?? json['pending_formatted'])?.toString() ?? '₹0.00',
+      lockedBalance: _toDouble(json['lockedBalance'] ?? json['locked_balance']),
+      lockedFormatted:
+          (json['lockedFormatted'] ?? json['locked_formatted'])?.toString() ?? '₹0.00',
+      lifetimeEarned: _toDouble(json['lifetimeEarned'] ?? json['lifetime_earned']),
+      lifetimeFormatted:
+          (json['lifetimeFormatted'] ?? json['lifetime_formatted'])?.toString() ?? '₹0.00',
+      totalWithdrawn: _toDouble(json['totalWithdrawn'] ?? json['total_withdrawn']),
       currency: json['currency']?.toString() ?? 'INR',
-      currencySymbol: json['currencySymbol']?.toString() ?? '₹',
+      currencySymbol: (json['currencySymbol'] ?? json['currency_symbol'])?.toString() ?? '₹',
     );
   }
 
@@ -165,9 +179,9 @@ class AffiliateStats extends Equatable {
 
   factory AffiliateStats.fromJson(Map<String, dynamic> json) {
     return AffiliateStats(
-      totalClicks: _toInt(json['totalClicks']),
-      totalOrders: _toInt(json['totalOrders']),
-      conversionRate: _toDouble(json['conversionRate']),
+      totalClicks: _toInt(json['totalClicks'] ?? json['total_clicks']),
+      totalOrders: _toInt(json['totalOrders'] ?? json['total_orders']),
+      conversionRate: _toDouble(json['conversionRate'] ?? json['conversion_rate']),
     );
   }
 
@@ -202,19 +216,19 @@ class AffiliatePayoutProfile extends Equatable {
   });
 
   bool get isConfigured =>
-      (method == 'upi' && upiId != null && upiId!.isNotEmpty) ||
-      (method == 'bank_transfer' &&
+      ((method == 'upi' || method == 'UPI') && upiId != null && upiId!.isNotEmpty) ||
+      ((method == 'bank_transfer' || method == 'bank') &&
           accountNumber != null &&
           accountNumber!.isNotEmpty);
 
   factory AffiliatePayoutProfile.fromJson(Map<String, dynamic> json) {
     return AffiliatePayoutProfile(
-      method: json['method']?.toString(),
-      upiId: json['upiId']?.toString(),
-      accountNumber: json['accountNumber']?.toString(),
-      ifscCode: json['ifscCode']?.toString(),
-      accountHolder: json['accountHolder']?.toString(),
-      bankName: json['bankName']?.toString(),
+      method: (json['method'] ?? json['payout_method'])?.toString(),
+      upiId: (json['upiId'] ?? json['upi_id'])?.toString(),
+      accountNumber: (json['accountNumber'] ?? json['account_number'])?.toString(),
+      ifscCode: (json['ifscCode'] ?? json['ifsc_code'])?.toString(),
+      accountHolder: (json['accountHolder'] ?? json['account_holder'])?.toString(),
+      bankName: (json['bankName'] ?? json['bank_name'])?.toString(),
     );
   }
 
@@ -249,11 +263,21 @@ class AffiliateConfig extends Equatable {
 
   factory AffiliateConfig.fromJson(Map<String, dynamic> json) {
     return AffiliateConfig(
-      minWithdrawalAmount: _toDouble(json['minWithdrawalAmount'], fallback: 500.0),
-      clearanceDays: _toInt(json['clearanceDays'], fallback: 7),
+      minWithdrawalAmount: _toDouble(
+        json['minWithdrawalAmount'] ?? json['min_withdrawal_amount'],
+        fallback: 500.0,
+      ),
+      clearanceDays: _toInt(
+        json['clearanceDays'] ?? json['clearance_days'],
+        fallback: 7,
+      ),
       defaultCommissionType:
-          json['defaultCommissionType']?.toString() ?? 'percentage',
-      defaultCommissionValue: _toDouble(json['defaultCommissionValue'], fallback: 10.0),
+          (json['defaultCommissionType'] ?? json['default_commission_type'])?.toString() ??
+              'percentage',
+      defaultCommissionValue: _toDouble(
+        json['defaultCommissionValue'] ?? json['default_commission_value'],
+        fallback: 10.0,
+      ),
     );
   }
 
@@ -302,21 +326,27 @@ class ProductShareInfo extends Equatable {
   });
 
   factory ProductShareInfo.fromJson(Map<String, dynamic> json) {
+    final raw = json['data'] is Map<String, dynamic>
+        ? json['data'] as Map<String, dynamic>
+        : (json['productShareInfo'] is Map<String, dynamic>
+            ? json['productShareInfo'] as Map<String, dynamic>
+            : json);
+
     return ProductShareInfo(
-      productId: _toInt(json['productId']),
-      name: json['name']?.toString(),
-      urlKey: json['urlKey']?.toString(),
-      price: _toDouble(json['price']),
-      priceFormatted: json['priceFormatted']?.toString(),
-      commission: json['commission'] is Map<String, dynamic>
+      productId: _toInt(raw['productId'] ?? raw['product_id']),
+      name: raw['name']?.toString(),
+      urlKey: (raw['urlKey'] ?? raw['url_key'])?.toString(),
+      price: _toDouble(raw['price']),
+      priceFormatted: (raw['priceFormatted'] ?? raw['price_formatted'])?.toString(),
+      commission: raw['commission'] is Map<String, dynamic>
           ? ProductCommissionInfo.fromJson(
-              json['commission'] as Map<String, dynamic>,
+              raw['commission'] as Map<String, dynamic>,
             )
           : ProductCommissionInfo.empty(),
-      isAffiliate: json['isAffiliate'] == true,
-      referralCode: json['referralCode']?.toString(),
-      shareUrl: json['shareUrl']?.toString(),
-      shareMessage: json['shareMessage']?.toString(),
+      isAffiliate: (raw['isAffiliate'] ?? raw['is_affiliate']) == true,
+      referralCode: (raw['referralCode'] ?? raw['referral_code'])?.toString(),
+      shareUrl: (raw['shareUrl'] ?? raw['share_url'])?.toString(),
+      shareMessage: (raw['shareMessage'] ?? raw['share_message'])?.toString(),
     );
   }
 
@@ -353,11 +383,11 @@ class ProductCommissionInfo extends Equatable {
 
   factory ProductCommissionInfo.fromJson(Map<String, dynamic> json) {
     return ProductCommissionInfo(
-      isExcluded: json['isExcluded'] == true,
+      isExcluded: (json['isExcluded'] ?? json['is_excluded']) == true,
       type: json['type']?.toString() ?? 'percentage',
       rate: _toDouble(json['rate']),
-      estimatedAmount: _toDouble(json['estimatedAmount']),
-      displayText: json['displayText']?.toString() ?? '',
+      estimatedAmount: _toDouble(json['estimatedAmount'] ?? json['estimated_amount']),
+      displayText: (json['displayText'] ?? json['display_text'])?.toString() ?? '',
     );
   }
 
@@ -414,16 +444,17 @@ class AffiliateTransaction extends Equatable {
   factory AffiliateTransaction.fromJson(Map<String, dynamic> json) {
     return AffiliateTransaction(
       id: json['id']?.toString() ?? '',
-      transactionNumber: json['transactionNumber']?.toString(),
+      transactionNumber: (json['transactionNumber'] ?? json['transaction_number'])?.toString(),
       type: json['type']?.toString() ?? 'credit',
       amount: _toDouble(json['amount']),
-      amountFormatted: json['amountFormatted']?.toString() ?? '₹0.00',
-      balanceAfter: _toDouble(json['balanceAfter']),
-      balanceAfterFormatted: json['balanceAfterFormatted']?.toString() ?? '₹0.00',
+      amountFormatted: (json['amountFormatted'] ?? json['amount_formatted'])?.toString() ?? '₹0.00',
+      balanceAfter: _toDouble(json['balanceAfter'] ?? json['balance_after']),
+      balanceAfterFormatted:
+          (json['balanceAfterFormatted'] ?? json['balance_after_formatted'])?.toString() ?? '₹0.00',
       status: json['status']?.toString() ?? 'completed',
       title: json['title']?.toString(),
       description: json['description']?.toString(),
-      createdAt: json['createdAt']?.toString(),
+      createdAt: (json['createdAt'] ?? json['created_at'])?.toString(),
     );
   }
 
@@ -502,17 +533,18 @@ class AffiliateCommission extends Equatable {
   factory AffiliateCommission.fromJson(Map<String, dynamic> json) {
     return AffiliateCommission(
       id: json['id']?.toString() ?? '',
-      orderId: json['orderId']?.toString(),
-      orderNumber: json['orderNumber']?.toString(),
-      itemPrice: _toDouble(json['itemPrice']),
-      itemQty: _toInt(json['itemQty'], fallback: 1),
-      commissionType: json['commissionType']?.toString(),
-      commissionRate: _toDouble(json['commissionRate']),
-      commissionAmount: _toDouble(json['commissionAmount']),
-      commissionFormatted: json['commissionFormatted']?.toString() ?? '₹0.00',
+      orderId: (json['orderId'] ?? json['order_id'])?.toString(),
+      orderNumber: (json['orderNumber'] ?? json['order_number'])?.toString(),
+      itemPrice: _toDouble(json['itemPrice'] ?? json['item_price']),
+      itemQty: _toInt(json['itemQty'] ?? json['item_qty'], fallback: 1),
+      commissionType: (json['commissionType'] ?? json['commission_type'])?.toString(),
+      commissionRate: _toDouble(json['commissionRate'] ?? json['commission_rate']),
+      commissionAmount: _toDouble(json['commissionAmount'] ?? json['commission_amount']),
+      commissionFormatted:
+          (json['commissionFormatted'] ?? json['commission_formatted'])?.toString() ?? '₹0.00',
       status: json['status']?.toString() ?? 'pending',
-      clearsAt: json['clearsAt']?.toString(),
-      createdAt: json['createdAt']?.toString(),
+      clearsAt: (json['clearsAt'] ?? json['clears_at'])?.toString(),
+      createdAt: (json['createdAt'] ?? json['created_at'])?.toString(),
     );
   }
 
@@ -586,14 +618,14 @@ class AffiliatePayout extends Equatable {
   factory AffiliatePayout.fromJson(Map<String, dynamic> json) {
     return AffiliatePayout(
       id: json['id']?.toString() ?? '',
-      payoutNumber: json['payoutNumber']?.toString(),
+      payoutNumber: (json['payoutNumber'] ?? json['payout_number'])?.toString(),
       amount: _toDouble(json['amount']),
-      amountFormatted: json['amountFormatted']?.toString() ?? '₹0.00',
-      payoutMethod: json['payoutMethod']?.toString() ?? 'upi',
+      amountFormatted: (json['amountFormatted'] ?? json['amount_formatted'])?.toString() ?? '₹0.00',
+      payoutMethod: (json['payoutMethod'] ?? json['payout_method'])?.toString() ?? 'upi',
       status: json['status']?.toString() ?? 'pending',
-      transactionReference: json['transactionReference']?.toString(),
-      adminNotes: json['adminNotes']?.toString(),
-      createdAt: json['createdAt']?.toString(),
+      transactionReference: (json['transactionReference'] ?? json['transaction_reference'])?.toString(),
+      adminNotes: (json['adminNotes'] ?? json['admin_notes'])?.toString(),
+      createdAt: (json['createdAt'] ?? json['created_at'])?.toString(),
     );
   }
 
@@ -653,9 +685,9 @@ class PaginationMeta extends Equatable {
 
   factory PaginationMeta.fromJson(Map<String, dynamic> json) {
     return PaginationMeta(
-      currentPage: _toInt(json['currentPage'], fallback: 1),
-      lastPage: _toInt(json['lastPage'], fallback: 1),
-      perPage: _toInt(json['perPage'], fallback: 15),
+      currentPage: _toInt(json['currentPage'] ?? json['current_page'], fallback: 1),
+      lastPage: _toInt(json['lastPage'] ?? json['last_page'], fallback: 1),
+      perPage: _toInt(json['perPage'] ?? json['per_page'], fallback: 15),
       total: _toInt(json['total'], fallback: 0),
     );
   }
@@ -689,15 +721,25 @@ class AffiliateRegistrationResult {
   });
 
   factory AffiliateRegistrationResult.fromJson(Map<String, dynamic> json) {
+    final raw = json['data'] is Map<String, dynamic>
+        ? json['data'] as Map<String, dynamic>
+        : (json['registerAffiliate'] is Map<String, dynamic>
+            ? json['registerAffiliate'] as Map<String, dynamic>
+            : json);
+
     return AffiliateRegistrationResult(
-      success: json['success'] == true,
-      message: json['message']?.toString() ?? '',
-      affiliateId: json['affiliateId'] is int
-          ? json['affiliateId']
-          : int.tryParse(json['affiliateId']?.toString() ?? ''),
-      referralCode: json['referralCode']?.toString(),
-      referralLink: json['referralLink']?.toString(),
-      status: json['status']?.toString(),
+      success: raw['success'] == true || json['success'] == true,
+      message: (raw['message'] ?? json['message'])?.toString() ?? '',
+      affiliateId: raw['affiliateId'] is int
+          ? raw['affiliateId']
+          : (raw['affiliate_id'] is int
+              ? raw['affiliate_id']
+              : int.tryParse(
+                  (raw['affiliateId'] ?? raw['affiliate_id'])?.toString() ?? '',
+                )),
+      referralCode: (raw['referralCode'] ?? raw['referral_code'])?.toString(),
+      referralLink: (raw['referralLink'] ?? raw['referral_link'])?.toString(),
+      status: (raw['status'] ?? raw['affiliate_status'])?.toString(),
     );
   }
 }
@@ -728,17 +770,23 @@ class PayoutRequestResult {
   });
 
   factory PayoutRequestResult.fromJson(Map<String, dynamic> json) {
+    final raw = json['data'] is Map<String, dynamic>
+        ? json['data'] as Map<String, dynamic>
+        : (json['requestAffiliatePayout'] is Map<String, dynamic>
+            ? json['requestAffiliatePayout'] as Map<String, dynamic>
+            : json);
+
     return PayoutRequestResult(
-      success: json['success'] == true,
-      message: json['message']?.toString() ?? '',
-      payoutId: json['payoutId']?.toString(),
-      payoutNumber: json['payoutNumber']?.toString(),
-      amount: _toDouble(json['amount']),
-      amountFormatted: json['amountFormatted']?.toString(),
-      method: json['method']?.toString(),
-      status: json['status']?.toString(),
-      availableBalance: _toDouble(json['availableBalance']),
-      lockedBalance: _toDouble(json['lockedBalance']),
+      success: raw['success'] == true || json['success'] == true,
+      message: (raw['message'] ?? json['message'])?.toString() ?? '',
+      payoutId: (raw['payoutId'] ?? raw['payout_id'])?.toString(),
+      payoutNumber: (raw['payoutNumber'] ?? raw['payout_number'])?.toString(),
+      amount: _toDouble(raw['amount']),
+      amountFormatted: (raw['amountFormatted'] ?? raw['amount_formatted'])?.toString(),
+      method: (raw['method'] ?? raw['payout_method'])?.toString(),
+      status: raw['status']?.toString(),
+      availableBalance: _toDouble(raw['availableBalance'] ?? raw['available_balance']),
+      lockedBalance: _toDouble(raw['lockedBalance'] ?? raw['locked_balance']),
     );
   }
 }
@@ -757,11 +805,17 @@ class PayoutSettingsResult {
   });
 
   factory PayoutSettingsResult.fromJson(Map<String, dynamic> json) {
+    final raw = json['data'] is Map<String, dynamic>
+        ? json['data'] as Map<String, dynamic>
+        : (json['updateAffiliatePayoutSettings'] is Map<String, dynamic>
+            ? json['updateAffiliatePayoutSettings'] as Map<String, dynamic>
+            : json);
+
     return PayoutSettingsResult(
-      success: json['success'] == true,
-      message: json['message']?.toString() ?? '',
-      payoutMethod: json['payoutMethod']?.toString(),
-      details: json['details'],
+      success: raw['success'] == true || json['success'] == true,
+      message: (raw['message'] ?? json['message'])?.toString() ?? '',
+      payoutMethod: (raw['payoutMethod'] ?? raw['payout_method'])?.toString(),
+      details: raw['details'],
     );
   }
 }

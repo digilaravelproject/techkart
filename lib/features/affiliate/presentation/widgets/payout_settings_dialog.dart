@@ -34,6 +34,7 @@ class PayoutSettingsDialog extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => PayoutSettingsDialog(
         currentProfile: currentProfile,
@@ -113,19 +114,25 @@ class _PayoutSettingsDialogState extends State<PayoutSettingsDialog> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+
     return Container(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.neutral900 : AppColors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: SingleChildScrollView(
-        child: Column(
+      child: SafeArea(
+        top: false,
+        bottom: true,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 24,
+            bottom: viewInsets > 0 ? viewInsets + 16 : 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -255,7 +262,9 @@ class _PayoutSettingsDialogState extends State<PayoutSettingsDialog> {
           ],
         ),
       ),
-    );
+      ),
+    ),
+  );
   }
 
   Widget _buildField({

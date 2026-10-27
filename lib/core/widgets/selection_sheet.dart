@@ -38,6 +38,7 @@ class SelectionSheet<T> extends StatefulWidget {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: dark ? AppColors.neutral800 : AppColors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

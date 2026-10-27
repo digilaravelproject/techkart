@@ -74,3 +74,4 @@ assets/ml/
 # !ios/Runner/GoogleService-Info.plist
 
 /.kilo
+/.agent

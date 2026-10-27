@@ -387,6 +387,12 @@ class CartRepository {
     );
 
     if (result.hasException) {
+      final msg = result.exception?.graphqlErrors.firstOrNull?.message ??
+          result.exception.toString();
+      if (msg.toLowerCase().contains('cart not found')) {
+        debugPrint('[CartRepo] getCart: cart not found (treated as empty cart)');
+        return CartModel.empty;
+      }
       if (ErrorMapper.isNetworkError(result.exception!) && attempt < 3) {
         debugPrint(
           '[CartRepo] getCart timeout — retrying (attempt ${attempt + 1})...',

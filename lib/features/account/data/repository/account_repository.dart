@@ -1116,8 +1116,8 @@ class AccountRepository {
   /// Fetch a single customer order detail by numeric ID.
   /// The Bagisto API expects an IRI ID for the `customerOrder(id: ID!)` query.
   /// We construct it as: `/api/shop/customer-orders/{numericId}`
-  Future<OrderDetail> getCustomerOrder(int orderId) async {
-    debugPrint('📦 AccountRepo.getCustomerOrder (id=$orderId)');
+  Future<OrderDetail> getCustomerOrder(int orderId, {int attempt = 1}) async {
+    debugPrint('📦 AccountRepo.getCustomerOrder (id=$orderId, attempt=$attempt)');
 
     final iriId = '/api/shop/customer-orders/$orderId';
 
@@ -1130,6 +1130,11 @@ class AccountRepository {
     );
 
     if (result.hasException) {
+      if (result.exception?.linkException != null && attempt < 3) {
+        debugPrint('⚠️ [AccountRepo] getCustomerOrder transient error, retrying in ${500 * attempt}ms...');
+        await Future.delayed(Duration(milliseconds: 500 * attempt));
+        return getCustomerOrder(orderId, attempt: attempt + 1);
+      }
       final message = _extractErrorMessage(result.exception!);
       debugPrint('📦 AccountRepo.getCustomerOrder — error: $message');
       throw AccountException(message);

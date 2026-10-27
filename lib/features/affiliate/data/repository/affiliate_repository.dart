@@ -43,7 +43,7 @@ class AffiliateRepository {
       final result = await activeClient.query(
         QueryOptions(
           document: gql(AffiliateQueries.getAffiliateDashboard),
-          fetchPolicy: FetchPolicy.networkOnly,
+          fetchPolicy: FetchPolicy.noCache,
         ),
       );
 
@@ -81,7 +81,7 @@ class AffiliateRepository {
         QueryOptions(
           document: gql(AffiliateQueries.getProductShareInfo),
           variables: {'productId': productId},
-          fetchPolicy: FetchPolicy.networkOnly,
+          fetchPolicy: FetchPolicy.noCache,
         ),
       );
 
@@ -268,7 +268,7 @@ class AffiliateRepository {
         QueryOptions(
           document: gql(AffiliateQueries.getAffiliateTransactions),
           variables: {'page': page, 'limit': limit},
-          fetchPolicy: FetchPolicy.networkOnly,
+          fetchPolicy: FetchPolicy.noCache,
         ),
       );
 
@@ -309,7 +309,7 @@ class AffiliateRepository {
         QueryOptions(
           document: gql(AffiliateQueries.getAffiliateCommissions),
           variables: {'page': page, 'limit': limit},
-          fetchPolicy: FetchPolicy.networkOnly,
+          fetchPolicy: FetchPolicy.noCache,
         ),
       );
 
@@ -350,7 +350,7 @@ class AffiliateRepository {
         QueryOptions(
           document: gql(AffiliateQueries.getAffiliatePayouts),
           variables: {'page': page, 'limit': limit},
-          fetchPolicy: FetchPolicy.networkOnly,
+          fetchPolicy: FetchPolicy.noCache,
         ),
       );
 
@@ -436,7 +436,12 @@ class AffiliateRepository {
       return exception.graphqlErrors.first.message;
     }
     if (exception.linkException != null) {
-      return 'Network error: please check your connection';
+      final linkErr = exception.linkException;
+      final original = linkErr?.originalException;
+      if (original != null) {
+        return original.toString();
+      }
+      return linkErr.toString();
     }
     return 'An unexpected error occurred';
   }

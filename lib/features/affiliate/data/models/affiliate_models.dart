@@ -222,13 +222,38 @@ class AffiliatePayoutProfile extends Equatable {
           accountNumber!.isNotEmpty);
 
   factory AffiliatePayoutProfile.fromJson(Map<String, dynamic> json) {
+    Map<String, dynamic>? details;
+    if (json['details'] is Map<String, dynamic>) {
+      details = json['details'] as Map<String, dynamic>;
+    }
+
     return AffiliatePayoutProfile(
       method: (json['method'] ?? json['payout_method'])?.toString(),
-      upiId: (json['upiId'] ?? json['upi_id'])?.toString(),
-      accountNumber: (json['accountNumber'] ?? json['account_number'])?.toString(),
-      ifscCode: (json['ifscCode'] ?? json['ifsc_code'])?.toString(),
-      accountHolder: (json['accountHolder'] ?? json['account_holder'])?.toString(),
-      bankName: (json['bankName'] ?? json['bank_name'])?.toString(),
+      upiId: (json['upiId'] ??
+              json['upi_id'] ??
+              details?['upiId'] ??
+              details?['upi_id'])
+          ?.toString(),
+      accountNumber: (json['accountNumber'] ??
+              json['account_number'] ??
+              details?['accountNumber'] ??
+              details?['account_number'])
+          ?.toString(),
+      ifscCode: (json['ifscCode'] ??
+              json['ifsc_code'] ??
+              details?['ifscCode'] ??
+              details?['ifsc_code'])
+          ?.toString(),
+      accountHolder: (json['accountHolder'] ??
+              json['account_holder'] ??
+              details?['accountHolder'] ??
+              details?['account_holder'])
+          ?.toString(),
+      bankName: (json['bankName'] ??
+              json['bank_name'] ??
+              details?['bankName'] ??
+              details?['bank_name'])
+          ?.toString(),
     );
   }
 

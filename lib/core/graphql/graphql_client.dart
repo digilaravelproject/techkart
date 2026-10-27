@@ -93,12 +93,16 @@ class LoggingHttpClient extends http.BaseClient {
       );
       _logApiMessage('═══════════════════════════════════════════');
 
+      final headers = Map<String, String>.from(response.headers);
+      headers['content-length'] = responseBytes.length.toString();
+      headers.remove('content-encoding');
+
       return http.StreamedResponse(
         Stream<List<int>>.value(responseBytes),
         response.statusCode,
-        contentLength: response.contentLength,
+        contentLength: responseBytes.length,
         request: response.request,
-        headers: response.headers,
+        headers: headers,
         isRedirect: response.isRedirect,
         persistentConnection: response.persistentConnection,
         reasonPhrase: response.reasonPhrase,
